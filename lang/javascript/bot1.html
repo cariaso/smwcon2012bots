@@ -14,14 +14,14 @@
     function onSuccess(data) {
       var results = data['query']['results'];
       for (var name in results) {
-        println(name+'\n');
+        println(name);
       }
     }
 
     function onError(e, xhr) {
-      println("failed\n");
-      println(e+'\n');
-      println(xhr+'\n');
+      println("failed");
+      println(e);
+      println(xhr);
     }
 
     function doUpdate() {
