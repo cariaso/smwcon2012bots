@@ -1,5 +1,11 @@
 #!/bin/env python
 
+# Pywikipedia really wants settings in the filesystem. It depends on
+# particular paths and filenames all of which make simple bots very
+# complicated. More complicated bots eventually reap the rewards, but
+# this minimal example is scary.
+#
+
 
 # svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
 import sys
