@@ -20,7 +20,6 @@ use MediaWiki::API;
 
 
 
-my $mw = MediaWiki::API->new();
 
 
 
@@ -32,7 +31,7 @@ my $mw = MediaWiki::API->new();
 # Settings
 #############################################################
 
-$mw->{config}->{api_url} = 'http://www.semantic-mediawiki.org/w/api.php';
+my $api_url = 'http://www.semantic-mediawiki.org/w/api.php';
 my $username='Cariaso';
 my $password='correct horse battery staple';
 
@@ -245,6 +244,8 @@ sub DemoSemanticAsk {
 # main
 #############################################################
 
+my $mw = MediaWiki::API->new();
+$mw->{config}->{api_url} = $api_url;
 
 DemoReadCategoryTitles1($mw);
 DemoReadCategoryTitles2($mw);

@@ -33,8 +33,6 @@ username='Cariaso'
 password='correct horse battery staple'
 
 
-mw = wiki.Wiki(api_url)
-
 
 
 
@@ -163,12 +161,16 @@ def DemoSemanticAsk(mw):
 # main
 #############################################################
 
-DemoReadCategoryTitles1(mw)
-DemoReadPageText(mw)
 
-mw.login(username, password)
-DemoWritePageText(mw)
-DemoAppendPageText(mw)
+if __name__ == '__main__':
+    mw = wiki.Wiki(api_url)
 
-DemoSemanticAsk(mw)
+    DemoReadCategoryTitles1(mw)
+    DemoReadPageText(mw)
+
+    mw.login(username, password)
+    DemoWritePageText(mw)
+    DemoAppendPageText(mw)
+
+    DemoSemanticAsk(mw)
 
