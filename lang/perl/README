@@ -1,0 +1,5 @@
+Requires MediaWiki::API
+
+
+
+you will need to set a real $username and $password in bot1.pl in order to write
