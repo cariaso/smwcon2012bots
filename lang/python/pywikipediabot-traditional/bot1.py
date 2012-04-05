@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import sys
 sys.path.append('pywikipedia')
 sys.path.append('pywikipedia/userinterfaces')
