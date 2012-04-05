@@ -35,5 +35,6 @@ From inside a freshly booted ec2 ami-e565ba8c
   sudo yum -y install perl-JSON
   sudo yum -y install make
   sudo cpan MediaWiki::API
-  perl bot1.pl 
+  perl bot1.pl
+  cd ..
 
