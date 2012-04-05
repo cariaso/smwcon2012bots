@@ -1,6 +1,6 @@
 import sys
-sys.path.append('../pywikipedia')
-sys.path.append('../pywikipedia/userinterfaces')
+sys.path.append('pywikipedia')
+sys.path.append('pywikipedia/userinterfaces')
 
 
 
