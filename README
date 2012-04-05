@@ -40,13 +40,14 @@ From inside a freshly booted ec2 ami-e565ba8c
   ./bot1.py 
   cd ..
 
+
+  svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
+
   cd pywikipediabot-traditional
-  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
   ./bot1.py 
   cd ..
 
   cd pywikipediabot-singlefile
-  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
   ./bot1.py 
   cd ..
 
