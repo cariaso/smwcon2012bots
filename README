@@ -25,7 +25,7 @@ From inside a freshly booted ec2 ami-e565ba8c
   sudo gem install rest-client
   sudo gem install activesupport
   git clone git://github.com/jpatokal/mediawiki-gateway.git
-  sed -i 's/private/#private/g' mediawiki-gateway/lib/media_wiki/gateway.rb
+  sed -ibak 's/private/#private/g' mediawiki-gateway/lib/media_wiki/gateway.rb
   ruby bot1.rb 
   cd ..
 
