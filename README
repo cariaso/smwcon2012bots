@@ -1,3 +1,43 @@
 Simple example bots in multiple languages in preparation for
 
 http://semantic-mediawiki.org/wiki/SMWCon_Spring_2012
+
+
+
+
+From inside a freshly booted ec2 ami-e565ba8c
+
+  sudo yum update
+  sudo yum install git
+  git clone git://github.com/cariaso/smwcon2012bots.git
+  cd smwcon2012bots
+  cd lang
+
+
+  cd python
+  sudo yum install subversion
+  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+  ./bot1-simple.py 
+  cd ..
+
+
+  cd ruby
+  sudo yum install rubygems
+  sudo gem install rest-client
+  sudo yum install gem
+  sudo gem install rest-client
+  sudo gem install activesupport
+  sudo gem install active_support
+  git clone git://github.com/jpatokal/mediawiki-gateway.git
+  sed -i 's/private/#private/g' mediawiki-gateway/lib/media_wiki/gateway.rb
+  ruby bot1.rb 
+  cd ..
+
+
+  cd perl
+  perl bot1.pl 
+  sudo yum install cpan
+  sudo yum install perl-JSON
+  sudo cpan MediaWiki::API
+  perl bot1.pl 
+

@@ -6,7 +6,7 @@
 #
 #########################################
 #
-# need to remove the 'private' from mediawiki-gateway/lib/media_wiki/gateway.rb
+# comment out 'private' in mediawiki-gateway/lib/media_wiki/gateway.rb line 563
 # since the standard version makes make_api_request() inaccessible
 #
 # git clone git://github.com/jpatokal/mediawiki-gateway.git
