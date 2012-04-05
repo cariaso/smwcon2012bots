@@ -4,7 +4,6 @@ http://semantic-mediawiki.org/wiki/SMWCon_Spring_2012
 
 
 
-
 From inside a freshly booted ec2 ami-e565ba8c
 
   sudo yum -y install git
@@ -13,10 +12,12 @@ From inside a freshly booted ec2 ami-e565ba8c
   cd lang
 
 
-  cd python
-  sudo yum -y install subversion
-  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
-  ./bot1-simple.py 
+  cd perl
+  sudo yum -y install cpan
+  sudo yum -y install perl-JSON
+  sudo yum -y install make
+  sudo cpan MediaWiki::API
+  perl bot1.pl
   cd ..
 
 
@@ -30,11 +31,24 @@ From inside a freshly booted ec2 ami-e565ba8c
   cd ..
 
 
-  cd perl
-  sudo yum -y install cpan
-  sudo yum -y install perl-JSON
-  sudo yum -y install make
-  sudo cpan MediaWiki::API
-  perl bot1.pl
+
+  cd python
+
+  cd simple
+  sudo yum -y install subversion
+  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+  ./bot1.py 
+  cd ..
+
+  cd pywikipediabot-traditional
+  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+  ./bot1.py 
+  cd ..
+
+  cd pywikipediabot-singlefile
+  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+  ./bot1.py 
+  cd ..
+
   cd ..
 
