@@ -31,7 +31,7 @@ use MediaWiki::API;
 # Settings
 #############################################################
 
-my $api_url = 'http://www.semantic-mediawiki.org/w/api.php';
+my $api_url = 'http://sandbox.semantic-mediawiki.org/w/api.php';
 my $username='Cariaso';
 my $password='correct horse battery staple';
 

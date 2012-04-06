@@ -5,7 +5,7 @@ class Family(family.Family):
        family.Family.__init__(self)
        self.name = 'mywiki'
        self.langs = {
-           'en': 'www.semantic-mediawiki.org',
+           'en': 'sandbox.semantic-mediawiki.org',
           }
        self.namespaces[102] = { 'en': 'Property' }
 

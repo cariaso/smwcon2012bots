@@ -20,7 +20,7 @@ import tempfile
 import atexit
 import shutil
 
-siteparams = {'host':'www.semantic-mediawiki.org',
+siteparams = {'host':'sandbox.semantic-mediawiki.org',
               'apipath':'/w/api.php'}
 
 sitename = 'mysite'
