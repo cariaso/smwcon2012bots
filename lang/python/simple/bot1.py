@@ -28,7 +28,7 @@ import page
 # Settings
 #############################################################
 
-api_url = 'http://sandbox.semantic-mediawiki.org/w/api.php'
+api_url = 'http://sandbox.semantic-mediawiki.org/api.php'
 username='Cariaso'
 password='correct horse battery staple'
 

@@ -13,5 +13,6 @@ class Family(family.Family):
         return "1.17"
 
     def apipath(self, code):
-       return '/w/api.php'
+       # could also be '/w/api.php'
+       return '/api.php'
 

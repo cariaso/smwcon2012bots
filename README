@@ -42,12 +42,12 @@ From inside a freshly booted ec2 ami-e565ba8c
   ./bot1.py 
   cd ..
 
-  cd pywikipediabot-traditional
+  cd traditional
   svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
   ./bot1.py 
   cd ..
 
-  cd pywikipediabot-singlefile
+  cd singlefile
   svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
   ./bot1.py 
   cd ..

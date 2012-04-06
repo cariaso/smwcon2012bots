@@ -21,7 +21,7 @@ import atexit
 import shutil
 
 siteparams = {'host':'sandbox.semantic-mediawiki.org',
-              'apipath':'/w/api.php'}
+              'apipath':'/api.php'}
 
 sitename = 'mysite'
 
