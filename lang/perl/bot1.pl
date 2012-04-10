@@ -31,6 +31,9 @@ use MediaWiki::API;
 # Settings
 #############################################################
 
+#my $api_url = 'http://www.semantic-mediawiki.org/w/api.php';
+# the above is to remind you about /w/ and similar
+
 my $api_url = 'http://sandbox.semantic-mediawiki.org/api.php';
 my $username='Cariaso';
 my $password='correct horse battery staple';
@@ -56,7 +59,7 @@ sub DemoReadCategoryTitles1 {
 			    cmtitle => 'Category:City',
 			    cmnamespace => 0,
 			    cmlimit=>'100' } )
-	|| die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+	|| warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
 
     foreach my $city (@$ref) {
@@ -98,7 +101,7 @@ sub DemoReadCategoryTitles2 {
 		  cmnamespace => 0,
 		  cmlimit=>'100' },
 		{ max => 4, hook => \&print_articles } )
-	|| die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+	|| warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
     
 }
 
@@ -164,7 +167,7 @@ sub DemoWritePageText {
 	action => 'edit',
 	title => $pagename,
 	text => $newtext } )
-	|| die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+	|| warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 }
 
 
@@ -202,7 +205,7 @@ sub DemoAppendPageText {
 	    title => $pagename,
 	    basetimestamp => $timestamp, # to avoid edit conflicts
 	    text => $newtext } )
-	    || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+	    || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
     }
     
 }
@@ -218,22 +221,25 @@ sub DemoAppendPageText {
 sub DemoSemanticAsk {
     my ($mw) = @_;
 
-    my $query = "
-{{#ask: [[Category:City]] [[located in::Germany]] 
-| ?population 
-| ?Area
-}}
-";
-
     my $response = $mw->api( {
-        action => 'ask',
-        query => $query,
+        action     => 'askargs',
+        conditions => 'Category:City | located in::Germany',
+        printouts  => 'area|population',
+	parameters =>'|sort=Modification date|order=desc',
         })
-           || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+           || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
+    my $results = $response->{query}->{results};
+    foreach my $name (keys %$results) {
 
-    foreach my $name (keys %{$response->{query}->{results}}) {
-        print "  $name\n";
+	
+	my $population = $results->{$name}->{'printouts'}->{'population'}[0];
+	my $area       = $results->{$name}->{'printouts'}->{'area'}[0]->{fulltext};
+	
+	# this is necessary for the schema on the non-sandbox site
+	#my $area       = $results->{$name}->{'printouts'}->{'area'}[0];
+	
+        print "  $name \t $population \t $area\n";
     }
 }
 
@@ -247,18 +253,20 @@ sub DemoSemanticAsk {
 my $mw = MediaWiki::API->new();
 $mw->{config}->{api_url} = $api_url;
 
+my $res = $mw->login( { lgname     => $username, 
+                        lgpassword => $password,
+                      } ) 
+    || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+
+
 DemoReadCategoryTitles1($mw);
 DemoReadCategoryTitles2($mw);
 DemoReadPageText($mw);
 
-my $res = $mw->login( { lgname => $username, 
-                        lgpassword => $password 
-                      } ) 
-    || die $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+DemoSemanticAsk($mw);
 
 DemoWritePageText($mw);
 DemoAppendPageText($mw);
-DemoSemanticAsk($mw);
 
 
 
