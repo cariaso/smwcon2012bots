@@ -3,6 +3,9 @@
 # Do I need to explain that this is not secure?
 # is it ONLY for setting up an ec2 which will live for ~1hr
 
+# wget https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh
+# sudo bootstrap.sh
+
 
 yum -y install git cpan perl-JSON make rubygems subversion
 gem install rest-client
