@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #########################################
 #
 # Read more at
@@ -153,24 +154,27 @@ end
 # Semantic ask
 #############################################################
 
+require 'pp'
+
 def DemoSemanticAsk(mw)
 
-    userquery = "
-{{#ask: [[Category:City]] [[located in::Germany]] 
-| ?population 
-| ?Area
-}}
-"
 
-
-    form_data = { 'action' => 'ask', 'query' => userquery }
+    form_data = { 'action'     => 'askargs',
+                  'conditions' => 'Category:City | located in::Germany',
+                  'printouts'  => 'area|population',
+                  'parameters' =>'|sort=Modification date|order=desc',
+                }
     xml, dummy = mw.make_api_request(form_data)
     results = xml.elements["query/results"]
     
     
     if results != nil
       results.each do |p| 
-        puts p.attributes["fulltext"]
+        name       = p.attributes["fulltext"]
+        population = p.elements["printouts/population/value"].text
+        area       = p.elements["printouts/area/value"].attributes["fulltext"]
+
+        print  name, " \t ", population, " \t ", area, "\n"
       end
     end
 
@@ -192,9 +196,14 @@ end
 #############################################################
 
 mw = MediaWiki::Gateway.new(api_url)
-DemoReadCategoryTitles1(mw)
-DemoReadPageText(mw)
-mw.login(username, password)
-DemoWritePageText(mw)
-DemoAppendPageText(mw)
+
+
+#DemoReadCategoryTitles1(mw)
+#DemoReadPageText(mw)
 DemoSemanticAsk(mw)
+
+mw.login(username, password)
+
+#DemoWritePageText(mw)
+#DemoAppendPageText(mw)
+
