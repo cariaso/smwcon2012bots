@@ -1,0 +1,48 @@
+My interest in wiki bots began many years ago with pywikipedia.  I
+planned to use it in my presentation, but have decided not to include
+it. However there is enough code here to perhaps be useful to others.
+
+pywikipedia is very capable, and is especially valuable for older
+mediawikis which don't have the api.php interface. However these are
+becoming rare and I don't think you're likely to encounter
+one. pywikipedia has grown beyond a library for writing your own bot,
+and instead includes a large collection of existing bots for various
+wiki maintenance tasks. 
+
+pywikipedia uses a rather complicated setup. All other libraries I've
+reviewed allow something akin to
+
+ mw = wiki.Wiki(api_url)
+ mw.login(username, password)
+
+however pywikipedia wants you to break that information up over 2
+different files, with a subdirectory and requires filenames determined
+by the name of the wiki. There are advtantages to that (such as
+password privacy and reusable config), but those advantages only
+matter for bigger bots or public mediawikis. Many of my wikis live
+behind the firewall, and have very different needs.
+
+This first directory shows you the traditional way of constructing a
+pywikipedia bot
+
+  cd traditional
+  svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
+  ./bot1.py 
+  cd ..
+
+but I'm very averse to 'polluting the directory' with the extra files,
+as it is very counter to my primary use case (an awesome clientside
+pywikipediabot available at http://promethease.com ). The code below
+is much more complicated, but manages to create the extra files before
+instantiating the bot, and then cleans them up afterwards. Maybe
+you'll find it useful or interesting. Really pywikipedia should just
+allow the simplified format as a secondary type of instantation. 
+
+That criticism aside, pywikipedia is a wonderfully capable library,
+and you should consider it for mid to large sized mediawiki bots.
+
+  cd singlefile
+  svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
+  ./bot1.py 
+  cd ..
+
