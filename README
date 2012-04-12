@@ -30,7 +30,7 @@ From inside a freshly booted ec2 ami-e565ba8c
   sudo gem install rest-client
   sudo gem install activesupport
   git clone git://github.com/jpatokal/mediawiki-gateway.git
-  sed -ibak 's/private/#private/g' mediawiki-gateway/lib/media_wiki/gateway.rb
+  sudo sed -ibak 's/private/#private/g' mediawiki-gateway/lib/media_wiki/gateway.rb
   ruby bot1.rb 
   cd ..
 
@@ -39,22 +39,7 @@ From inside a freshly booted ec2 ami-e565ba8c
 
   cd python
   sudo yum -y install subversion
-
-
-  cd simple
-  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+  svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/
   ./bot1.py 
-  cd ..
-
-  cd traditional
-  svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
-  ./bot1.py 
-  cd ..
-
-  cd singlefile
-  svn co http://svn.wikimedia.org/svnroot/pywikipedia/trunk/pywikipedia pywikipedia
-  ./bot1.py 
-  cd ..
-
   cd ..
 

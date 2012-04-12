@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 
-# svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/ python-wikitools-read-only
+# svn checkout http://python-wikitools.googlecode.com/svn/trunk/wikitools/
 import sys
-sys.path.append('python-wikitools-read-only')
+sys.path.append('wikitools')
 
 
 #########################################
