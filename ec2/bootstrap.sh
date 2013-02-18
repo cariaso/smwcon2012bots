@@ -7,10 +7,10 @@
 # sudo bootstrap.sh
 
 
-yum -y install git cpan perl-JSON make rubygems subversion
-gem install rest-client
-gem install activesupport
-curl -L http://cpanmin.us | perl - MediaWiki::API
+sudo yum -y install git cpan perl-JSON make rubygems subversion
+sudo gem install rest-client
+sudo gem install activesupport
+curl -L http://cpanmin.us | sudo perl - MediaWiki::API
 
 cd ~
 git clone git://github.com/cariaso/smwcon2012bots.git
