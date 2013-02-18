@@ -1,0 +1,26 @@
+12 months later.
+
+cpan install is a bit wonky
+
+ruby instructions are no longer correct due to a change with activerecord
+
+python was smooth
+
+ec2/bootstrap.sh has better(?) install instructions than the README
+
+
+
+
+
+
+
+
+
+
+  108  easy_install pip
+  109  sudo easy_install pip
+  111  sudo pip install argparse
+  113  sudo yum -y install gcc autoconf python-devel python-crypto gcc
+  116  sudo pip install fabric
+  117  ./install-semantic-mediawiki.py 
+
