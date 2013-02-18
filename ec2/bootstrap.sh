@@ -1,7 +1,5 @@
-#!/usr/bin/sh
+#!/bin/env bash
 
-# Do I need to explain that this is not secure?
-# is it ONLY for setting up an ec2 which will live for ~1hr
 
 # wget https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh
 # sudo bootstrap.sh
@@ -12,16 +10,29 @@ sudo gem install rest-client
 sudo gem install activesupport
 curl -L http://cpanmin.us | sudo perl - MediaWiki::API
 
+
+sudo easy_install pip
+sudo pip install argparse
+sudo yum -y install gcc autoconf python-devel python-crypto gcc
+sudo pip install fabric
+
+
 cd ~
-git clone git://github.com/cariaso/smwcon2012bots.git
+#git clone git://github.com/cariaso/smwcon2012bots.git
+
+cd smwcon2012bots/ec2
+./install-semantic-mediawiki.py --debug
 
 
 
+
+
+exit
+# Do I need to explain that this is not secure?
+# is it ONLY for setting up an ec2 which will live for ~1hr
 sed -ibak "s/^#PasswordAuthentication\syes/PasswordAuthentication yes/" /etc/ssh/sshd_config
 sed -ibak "s/^PasswordAuthentication\sno/#PasswordAuthentication no/" /etc/ssh/sshd_config
 /etc/init.d/sshd restart
-
-
 
 export password=`< /dev/urandom tr -dc a-z0-9 | head -c8`
 echo -n "creating users "

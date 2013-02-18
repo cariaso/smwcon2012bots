@@ -9,29 +9,156 @@ import smwinstaller
 
 
 
+
+
+#################################################################
+
+
+dbname = 'my_smw'
+#import time
+#time.sleep(1)
+hostnameinternal = os.system('curl http://169.254.169.254/latest/meta-data/local-hostname')
+publichostname = os.system('curl http://169.254.169.254/latest/meta-data/public-hostname')
+hostip = os.system('curl http://169.254.169.254/latest/meta-data/local-ipv4')
+print hostnameinternal
+wikiuser = 'wikiuser'
+userpassword = 'mybadpassword'
+wikiadminuser = 'root'
+wikiadminpassword = ''
+
+
+
+
 def main(argv=[]):
 
     parameters = smwinstaller.loadParameters(argv)
     if parameters.debug:
         print parameters
 
+        localize()
+        setup_mysql()
+        setup_httpd()
+        setup_php()
         setup_wiki()
         setup_webserver_step2()
 
 
-#################################################################
 
 
 
-snpediadbhost = ''
-userpassword = ''
-snpediadbname = ''
-wikiadminpassword = ''
-hostinternal = ''
-hostip = ''
-wikiadminuser = ''
 
 
+
+
+
+
+
+
+semsettingstext = '''
+<?php
+
+/**
+ * SemanticBundle - A pre-packaged bundle of extensions meant to be used on wikis
+ * based around the Semantic MediaWiki extension.
+ *
+ * Sample of the settings file for the Semantic Bundle
+ *
+ * @link https://www.mediawiki.org/wiki/Extension:Semantic_Bundle Documentation
+ *
+ * @file SemanticBundleSettings.php
+ * @ingroup SemanticBundle
+ */
+
+if ( !defined( 'MEDIAWIKI' ) ) {
+    echo "This file is not a valid entry point.";
+    exit( 1 );
+}
+
+# Semantic MediaWiki basic installation.
+# More info: http://semantic-mediawiki.org/wiki/Help:Installation
+#include_once( "$IP/extensions/Validator/Validator.php" );
+include_once( "$IP/extensions/SemanticMediaWiki/SemanticMediaWiki.php" );
+#enableSemantics( parse_url( $wgServer, PHP_URL_HOST ) );
+
+# Semantic Result Formats
+# More info: http://semantic-mediawiki.org/wiki/Help:Semantic_Result_Formats#Installation
+#include_once( "$IP/extensions/SemanticResultFormats/SemanticResultFormats.php" );
+
+# Semantic Forms
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Forms
+#include_once( "$IP/extensions/SemanticForms/SemanticForms.php" );
+
+# Semantic Forms Inputs
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Forms_Inputs
+#include_once( "$IP/extensions/SemanticFormsInputs/SemanticFormsInputs.php" );
+
+# Semantic Compound Queries
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Compound_Queries
+#include_once( "$IP/extensions/SemanticCompoundQueries/SemanticCompoundQueries.php" );
+
+# Semantic Drilldown
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Drilldown#Installation
+#include_once( "$IP/extensions/SemanticDrilldown/SemanticDrilldown.php" );
+
+# Maps and Semantic Maps 
+# If you're planning to use Google Maps or Yahoo! Maps, you should also set
+# $egGoogleMapsKey or $egYahooMapsKey (AFTER the include_once statements).
+# More info:
+# http://mapping.referata.com/wiki/Maps#Installation
+# http://mapping.referata.com/wiki/Semantic_Maps#Installation
+#include_once( "$IP/extensions/Maps/Maps.php" );
+#include_once( "$IP/extensions/SemanticMaps/SemanticMaps.php" );
+
+# Semantic Tasks
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Tasks#Installation
+#include_once( "$IP/extensions/SemanticTasks/SemanticTasks.php" );
+
+# Semantic Internal Objects
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Internal_Objects
+#include_once( "$IP/extensions/SemanticInternalObjects/SemanticInternalObjects.php" );
+
+# Semantic Image Input
+# More info: https://www.mediawiki.org/wiki/Extension:Semantic_Image_Input
+#include_once( "$IP/extensions/SemanticImageInput/SemanticImageInput.php" );
+
+# Admin Links
+# More info: https://www.mediawiki.org/wiki/Extension:Admin_Links#Installation
+#include_once( "$IP/extensions/AdminLinks/AdminLinks.php" );
+
+# Approved Revs
+# More info: https://www.mediawiki.org/wiki/Extension:Approved_Revs#Installation
+#include_once( "$IP/extensions/ApprovedRevs/ApprovedRevs.php" );
+
+# Arrays
+# More info: https://www.mediawiki.org/wiki/Extension:Arrays#Installation
+#include_once( "$IP/extensions/Arrays/Arrays.php" );
+
+# Data Transfer
+# More info: https://www.mediawiki.org/wiki/Extension:Data_Transfer#Installation
+#include_once( "$IP/extensions/DataTransfer/DataTransfer.php" );
+
+# External Data
+# More info: https://www.mediawiki.org/wiki/Extension:External_Data#Installation
+#include_once( "$IP/extensions/ExternalData/ExternalData.php" );
+
+# Header Tabs
+# More info: https://www.mediawiki.org/wiki/Extension:Header_Tabs#Installation
+#include_once( "$IP/extensions/HeaderTabs/HeaderTabs.php" );
+
+# Page Schemas
+# More info: https://www.mediawiki.org/wiki/Extension:Page_Schemas#Installation
+#require_once( "$IP/extensions/PageSchemas/PageSchemas.php" );
+
+# Replace Text
+# More info: https://www.mediawiki.org/wiki/Extension:Replace_Text#Installation
+#require_once( "$IP/extensions/ReplaceText/ReplaceText.php" );
+
+# Widgets
+# Also need to do some permission setup: http://www.mediawiki.org/wiki/Extension:Widgets#Folder_permissions
+# More info: https://www.mediawiki.org/wiki/Extension:Widgets#Installation
+#require_once( "$IP/extensions/Widgets/Widgets.php" );
+#$wgGroupPermissions['sysop']['editwidgets'] = true;
+'''
 apacheconftext = '''
 
 '''
@@ -104,7 +231,7 @@ $wgDBadminpassword  = '%(wikiadminpassword)s';
 $wgDBtype           = "mysql";
 $wgDBserver         = "%(dbhost)s";
 $wgDBname           = "%(dbname)s";
-$wgDBuser           = "wikiuser";
+$wgDBuser           = "%(wikiuser)s";
 $wgDBpassword       = "%(userpassword)s";
 
 # MySQL specific settings
@@ -172,7 +299,7 @@ $wgDiff3 = "/usr/bin/diff3";
 $wgCacheEpoch = max( $wgCacheEpoch, gmdate( 'YmdHis', @filemtime( __FILE__ ) ) );
 
 
-
+$wgShowExceptionDetails = true;
 
 
 require_once( "$IP/extensions/ParserFunctions/ParserFunctions.php" );
@@ -210,19 +337,20 @@ $wgCaptchaTriggers['createaccount'] = true;
 $wgUseAjax = true;
 
 
-require_once( "$IP/extensions/Validator/Validator.php" );
-include_once("$IP/extensions/SemanticMediaWiki/SemanticMediaWiki.php");
-enableSemantics('mysite.com');
+#require_once( "$IP/extensions/Validator/Validator.php" );
+require_once( "$IP/extensions/SemanticBundle/SemanticBundleSettings.php" );
+require_once( "$IP/extensions/SemanticBundle/SemanticBundle.php" );
+#include_once("$IP/extensions/SemanticMediaWiki/SemanticMediaWiki.php");
+#enableSemantics('mysite.com');
 
 
-# enable http://www.snpedia.com/index.php/Special:SMWAdmin?action=refreshstore
 $smwgAdminRefreshStore = true;
 
 $smwgEnableTemplateSupport = true;
 
 
 
-include_once("$IP/extensions/SemanticForms/SemanticForms.php");
+#include_once("$IP/extensions/SemanticForms/SemanticForms.php");
 
 #$wgJobRunRate = 0.01;
 
@@ -232,8 +360,8 @@ $wgNamespacesWithSubpages[NS_MAIN] = true;
 
 
 
-include_once("$IP/extensions/SemanticInternalObjects/SemanticInternalObjects.php");
-include_once("$IP/extensions/SemanticResultFormats/SemanticResultFormats.php");
+#include_once("$IP/extensions/SemanticInternalObjects/SemanticInternalObjects.php");
+#include_once("$IP/extensions/SemanticResultFormats/SemanticResultFormats.php");
 
 
 
@@ -277,19 +405,20 @@ $sdgFiltersSmallestFontSize=9;
 $sdgFiltersLargestFontSize=25;
 
 # necessary for bot semanticforms writes
-$wgParserConf['preprocessorClass'] = 'Preprocessor_Hash';
+#$wgParserConf['preprocessorClass'] = 'Preprocessor_Hash';
 
 
 """ % {
-        'host': hostinternal,
+        'host': hostnameinternal,
         'hostip': hostip,
 
         'dbhost': 'localhost',
         'userpassword': '',
-        'dbname': 'my_smw',
+        'dbname': dbname,
+        'wikiuser':wikiuser,
         'wikiadminpassword': '',
-        'wikiadminuser': 'root',
-        'hostname': 'ec2-54-242-143-149.compute-1.amazonaws.com',
+        'wikiadminuser': 'root', 
+        'hostname': publichostname,
         'email':'admin@example.com',
     }
 
@@ -329,42 +458,34 @@ def put_text_to_local_file(text, filename):
     f.close()
 
 
-def setup_wiki():
-
+def localize():
     global sudo
     global run
     global exists
+    global put_text_to_file
+    global cd
+
+    #orig_run = run
+
+
     orig_sudo = sudo
-    orig_run = run
-    orig_exists = exists
-
-
-    def local_sudo(cmd, pty=None, user=None):
+    def sudo(cmd, pty=None, user=None):
         return local(cmd)
 
-    def local_exists(path):
+    orig_exists = exists
+    def exists(path):
         return os.path.exists(os.path.join(env.lcwd,path))
 
     run = local
-    sudo = local_sudo
-    exists = local_exists
+    #sudo = local_sudo
+    #exists = local_exists
     put_text_to_file = put_text_to_local_file
     cd = lcd
 
 
+def setup_wiki():
 
-
-    setup_httpd()
-    setup_php()
-    # but https://forums.aws.amazon.com/thread.jspa?threadID=99754
-    #if not exists('/usr/lib64/php/modules/apc.so'):
-    #    sudo('yum -y remove *php*', pty=True)
-    #    sudo('yum -y install php php-devel php-pear php-pecl-apc php-mysql php-pdo php-gd php-cli php-common', pty=True)
-
-
-
-
-
+    
 
     if not exists('/var/www'):
         sudo('mkdir -p /var/www')
@@ -421,8 +542,11 @@ def setup_wiki():
 
                 
                 put_text_to_file(robotstext, '/var/www/html/robots.txt')
-                put_text_to_file(
-                    localsettingstext, '/var/www/html/LocalSettings.php')
+                localsettingsfile = '/var/www/html/LocalSettings.php'
+                if exists(localsettingsfile):
+                    print "leaving %s alone" % localsettingsfile
+                else:
+                    put_text_to_file(localsettingstext, localsettingsfile)
 
 
                 if not exists('extensions'):
@@ -437,15 +561,16 @@ def setup_wiki():
                             run('svn update')
 
                     for extension in [
+                        'SemanticMediaWiki',
+
                         #'SemanticDrilldown',
                         #'SemanticForms',
                         'ConfirmEdit',
                         'ParserFunctions',
                         #'SemanticInternalObjects',
                         'Validator',
-                        #'DataValues',
+                        'DataValues',
                         'SemanticBundle',
-                        #'SemanticMediaWiki',
                         #'SemanticResultFormats',
                         'ReplaceText',
                         'TitleBlacklist',
@@ -466,6 +591,8 @@ def setup_wiki():
 
 
 
+                    semsettingsname = '/var/www/html/extensions/SemanticBundle/SemanticBundleSettings.php'
+                    put_text_to_local_file(semsettingstext, semsettingsname)
 
 
         with cd('html'):
@@ -509,18 +636,25 @@ def setup_wiki():
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user='ec2-user')
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user='ec2-user')
 
+import random
+import string
 
 def setup_webserver_step2():
 
     run('apachectl restart')
 
-
     mywikipass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
     print 'using password %s' % mywikipass
 
+    try:
+        with cd('/var/www/html/maintenance'):
+            run('php install.php MySMW Cariaso --pass "%s"' % mywikipass)
+    except:
+        pass
+
     with cd('/var/www/html/maintenance'):
-        run('php install.php MySMW Cariaso --pass "%s"' % mywikipass)
         run('php update.php --quick')
+            
 
     with cd('/var/www/html/maintenance'):
         try:
@@ -536,13 +670,56 @@ def setup_webserver_step2():
 
 
 
+def setup_mysql():
+
+
+    import httplib
+    conn = httplib.HTTPConnection('169.254.169.254')
+    conn.request("GET", "/latest/meta-data/local-hostname")
+    r1 = conn.getresponse()
+    print r1.status, r1.reason
+    #hostnameinternal = os.system('curl http://169.254.169.254/latest/meta-data/local-hostname')
+    hostnameinternal = r1.read()
+    #publichostname = os.system('curl http://169.254.169.254/latest/meta-data/public-hostname')
+    #hostip = os.system('curl http://169.254.169.254/latest/meta-data/local-ipv4')
+
+    #global hostnameinternal
+    print hostnameinternal
+
+    adict = {
+        #'fromadminuser': wikiadminuser,
+        #'fromadminpass': wikiadminpassword,
+        #'fromdb': snpediadbname,
+        #'fromhost':snpediadbmachine,
+
+        'toadminuser': wikiadminuser,
+        'toadminpass': wikiadminpassword,
+        'todb':dbname,
+        'tohost':hostnameinternal,
+
+        'wikiusername': wikiuser,
+        'wikiuserpass': userpassword,
+        'hostinternal': hostnameinternal,
+
+
+
+        }
+
+    #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
+    mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' ''' % adict
+    adict['mysqlcmd'] = mysqlcmd
+
+    try:
+        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)                                                                                                                       
+    except:
+        print "unable to create the db"
+
+
+    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(m\
+ysqlcmd)s''' % adict)                                                                                                                                                                     
 
 
 def setup_httpd():
-
-
-    sudo('yum -y install mysql mysql-devel mysql-server')
-    sudo('/etc/init.d/mysqld restart')
 
     sudo('yum -y install httpd httpd-devel', pty=True)
 
