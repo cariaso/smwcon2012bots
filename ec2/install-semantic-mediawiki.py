@@ -23,7 +23,6 @@ def main(argv=[]):
 
 
 
-snpediadbmachine = 'localhost'
 snpediadbhost = ''
 userpassword = ''
 snpediadbname = ''
@@ -46,29 +45,11 @@ localsettingstext = """<?php
 # Further documentation for configuration settings may be found at:
 # http://www.mediawiki.org/wiki/Manual:Configuration_settings
 
-# If you customize your file layout, set $IP to the directory that contains
-# the other MediaWiki files. It will be used as a base to locate files.
-if( defined( 'MW_INSTALL_PATH' ) ) {
-        $IP = MW_INSTALL_PATH;
-} else {
-        $IP = dirname( __FILE__ );
+
+# Protect against web entry
+if ( !defined( 'MEDIAWIKI' ) ) {
+        exit;
 }
-
-$path = array( $IP, "$IP/includes", "$IP/languages", "/usr/share/php" );
-set_include_path( implode( PATH_SEPARATOR, $path ) . PATH_SEPARATOR . get_include_path() );
-
-require_once( "$IP/includes/DefaultSettings.php" );
-
-# If PHP's memory limit is very low, some operations may fail.
-ini_set( 'memory_limit', '200M' );
-
-if ( $wgCommandLineMode ) {
-        if ( isset( $_SERVER ) && array_key_exists( 'REQUEST_METHOD', $_SERVER ) ) {
-                die( "This script must be run from the command line\n" );
-        }
-}
-## Uncomment this to disable output compression
-# $wgDisableOutputCompression = true;
 
 $wgSitename         = "MySMW";
 
@@ -79,9 +60,16 @@ $wgSitename         = "MySMW";
 $wgScriptPath       = "";
 $wgScriptExtension  = ".php";
 
+
+
+
+
+
+## The protocol and server name to use in fully-qualified URLs
+$wgServer           = "http://%(hostname)s";
+
 ## The relative URL path to the skins directory
 $wgStylePath        = "$wgScriptPath/skins";
-
 
 ## The relative URL path to the logo.  Make sure you change this from the default,
 ## or else you'll overwrite your logo when you upgrade!
@@ -92,12 +80,21 @@ $wgLogo             = "$wgStylePath/common/images/wiki.png";
 $wgEnableEmail      = true;
 $wgEnableUserEmail  = true; # UPO
 
-$wgEmergencyContact = "info@example.com";
-$wgPasswordSender = "info@example.com";
 
 $wgEnotifUserTalk = true; # UPO
 $wgEnotifWatchlist = true; # UPO
 $wgEmailAuthentication = true;
+
+
+$wgEmergencyContact = "%(email)s";
+$wgPasswordSender   = "%(email)s";
+
+
+# If PHP's memory limit is very low, some operations may fail.
+ini_set( 'memory_limit', '200M' );
+
+
+
 
 ## Database settings
 
@@ -284,23 +281,28 @@ $wgParserConf['preprocessorClass'] = 'Preprocessor_Hash';
 
 
 """ % {
-        'dbmachine': snpediadbmachine,
-        'dbhost': snpediadbhost,
-        'userpassword': userpassword,
-        'dbname': snpediadbname,
-        'wikiadminpassword': wikiadminpassword,
         'host': hostinternal,
         'hostip': hostip,
-        'wikiadminuser': wikiadminuser,
+
+        'dbhost': 'localhost',
+        'userpassword': '',
+        'dbname': 'my_smw',
+        'wikiadminpassword': '',
+        'wikiadminuser': 'root',
+        'hostname': 'ec2-54-242-143-149.compute-1.amazonaws.com',
+        'email':'admin@example.com',
     }
 
                                                                                                                         
 
-from fabric.api import run, put, cd, lcd, env, get, sudo, settings
-from fabric.contrib.files import exists, append, contains
-from fabric.decorators import hosts, task
-from fabric.operations import local
-import fabric
+try:
+    from fabric.api import run, put, cd, lcd, env, get, sudo, settings
+    from fabric.contrib.files import exists, append, contains
+    from fabric.decorators import hosts, task
+    from fabric.operations import local
+    import fabric
+except ImportError:
+    print 'without fabric this program is a bit limited. try "pip install fabric"'
 
 
 def put_text_to_file(text, filename):
@@ -370,20 +372,23 @@ def setup_wiki():
 
     if not exists('/var/www/html'):
         sudo('mkdir -p /var/www/html')
-        #sudo('chown ec2-user:ec2-user /var/www/html', pty=True)
+        sudo('chown ec2-user:ec2-user /var/www/html', pty=True)
 
     if exists('/var/lib/php/session'):
         sudo('chmod a+rwx /var/lib/php/session')
 
     sudo('yum -y install subversion git')
 
+
+    # need 7z ?
+
+
+
     with cd('/var/www'):
-        #sudo('chown ec2-user:ec2-user html', pty=True)
+        sudo('chown ec2-user:ec2-user html', pty=True)
 
         tgzver = 'mediawiki-1.20.2.tar.gz'
         tgzurl = 'http://download.wikimedia.org/mediawiki/1.20/%s' % tgzver
-        import pdb
-        pdb.set_trace()
 
         if not exists(tgzver):
             #just run was good enough
@@ -431,21 +436,23 @@ def setup_wiki():
                         with cd('googleAnalytics'):
                             run('svn update')
 
-                    for extension in ['SemanticDrilldown',
-                                      'SemanticForms',
-                                      'ConfirmEdit',
-                                      'ParserFunctions',
-                                      'SemanticInternalObjects',
-                                      'Validator',
-                                      'DataValues',
-                                      'SemanticMediaWiki',
-                                      'SemanticResultFormats',
-                                      'ReplaceText',
-                                      'TitleBlacklist',
-                                      'Survey',
-                                      'Nuke',
-                                      'GoogleAdSense',
-                                      ]:
+                    for extension in [
+                        #'SemanticDrilldown',
+                        #'SemanticForms',
+                        'ConfirmEdit',
+                        'ParserFunctions',
+                        #'SemanticInternalObjects',
+                        'Validator',
+                        #'DataValues',
+                        'SemanticBundle',
+                        #'SemanticMediaWiki',
+                        #'SemanticResultFormats',
+                        'ReplaceText',
+                        'TitleBlacklist',
+                        'Survey',
+                        'Nuke',
+                        'GoogleAdSense',
+                        ]:
 
                         if not exists(extension):
                             run('git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions/%s.git' % extension)
@@ -470,8 +477,10 @@ def setup_wiki():
                 with cd('extensions'):
 
                     for extension, fetchname, gitversion in [
-                        ('SemanticMediaWiki', '1.8.x:1.8.x', '7317d89'), #'414f1d4' fails
-                        ('SemanticForms', None, '7317d89'), #
+                        #('SemanticMediaWiki', '1.8.x:1.8.x', '7317d89'), #'414f1d4' fails
+                        #('SemanticMediaWiki', '1.8.x', None),
+                        #('Validator', '1.0.x', None), 
+                        #('SemanticForms', None, 'REL1_20'), #
 
 
                         ]:
@@ -480,7 +489,9 @@ def setup_wiki():
                             with cd(extension):
                                 if fetchname:
                                     run('git fetch origin %s' % fetchname)
-                                run('git checkout %s' % gitversion)
+                                if gitversion:
+                                    run('git checkout %s' % gitversion)
+
 
 
 
@@ -498,9 +509,17 @@ def setup_wiki():
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user='ec2-user')
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user='ec2-user')
 
+
 def setup_webserver_step2():
 
+    run('apachectl restart')
+
+
+    mywikipass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    print 'using password %s' % mywikipass
+
     with cd('/var/www/html/maintenance'):
+        run('php install.php MySMW Cariaso --pass "%s"' % mywikipass)
         run('php update.php --quick')
 
     with cd('/var/www/html/maintenance'):
@@ -509,11 +528,22 @@ def setup_webserver_step2():
         except:
             print "php SMW_setup.php crapped out"
 
-    print "restart_webserver()"
+            run('php SMW_setup.php')
+    run('apachectl restart')
+
+
+
+
+
 
 
 
 def setup_httpd():
+
+
+    sudo('yum -y install mysql mysql-devel mysql-server')
+    sudo('/etc/init.d/mysqld restart')
+
     sudo('yum -y install httpd httpd-devel', pty=True)
 
     sudo("perl -p -i.bak -e 's!AddType\s+application/x-httpd-php\s+.php!!' /etc/httpd/conf/httpd.conf", pty=True)
@@ -536,7 +566,7 @@ def setup_httpd():
 
 
 def setup_php():
-    sudo('yum -y install php-devel php-pear php-pecl-apc', pty=True)
+    sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
 
 
 
