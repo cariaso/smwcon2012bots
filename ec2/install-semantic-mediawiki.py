@@ -6,6 +6,7 @@ import sys
 import os, errno
 import random
 import string
+import traceback
 
 import smwinstaller
 
@@ -15,10 +16,31 @@ import httplib
 def getsetting(name):
     conn = httplib.HTTPConnection('169.254.169.254')
     conn.request("GET", "/latest/meta-data/%s" % name)
+    #socket.error
     r1 = conn.getresponse()
     result = r1.read()
     print 'got',r1.status, r1.reason, name, result
     return result
+
+
+
+def getpublichostname():
+    try:
+        return getsetting('public-hostname')
+    except:
+        return os.system('hostname')
+
+def getinternalhostname():
+    try:
+        return getsetting('local-hostname')
+    except:
+        return 'localhost'
+
+def getip():
+    try:
+        return getsetting('local-ipv4')
+    except:
+        return '127.0.0.1'
 
 
 #################################################################
@@ -42,12 +64,17 @@ def init():
     global wikiAdminuser
     global wikiAdminpass
 
+    global unixadminuser
+    global unixuser
+
 
     dbname = 'my_smw'
+    unixadminuser = 'ec2-user'
+    unixuser = 'vagrant'
 
-    publichostname = getsetting('public-hostname')
-    hostnameinternal = getsetting('local-hostname')
-    hostip = getsetting('local-ipv4')
+    publichostname = getpublichostname()
+    hostnameinternal = getinternalhostname()
+    hostip = getip()
 
 
     dbadminuser = 'root'
@@ -464,7 +491,7 @@ def put_text_to_file(text, filename):
         put(atmpfn, filename)
     except:
         remotefn = 'a_tmp2_file'
-        sudo('chown ec2-user:ec2-user %s' % filename, pty=True)
+        sudo('chown %s:%s %s' % (unixuser, unixuser, filename), pty=True)
         sudo('chmod g+w %s' % filename, pty=True)
         put(atmpfn, remotefn)
         run('mv %s %s' % (remotefn, filename))
@@ -509,11 +536,11 @@ def setup_wiki():
 
     if not exists('/var/www'):
         sudo('mkdir -p /var/www')
-    sudo('chown ec2-user:ec2-user /var/www', pty=True)
+    sudo('chown %s:%s /var/www' % (unixuser, unixuser), pty=True)
 
     if not exists('/var/www/html'):
         sudo('mkdir -p /var/www/html')
-        sudo('chown ec2-user:ec2-user /var/www/html', pty=True)
+        sudo('chown %s:%s /var/www/html'  % (unixuser, unixuser), pty=True)
 
     if exists('/var/lib/php/session'):
         sudo('chmod a+rwx /var/lib/php/session')
@@ -526,14 +553,14 @@ def setup_wiki():
 
 
     with cd('/var/www'):
-        sudo('chown ec2-user:ec2-user html', pty=True)
+        sudo('chown %s:%s html'  % (unixuser, unixuser), pty=True)
 
         tgzver = 'mediawiki-1.20.2.tar.gz'
         tgzurl = 'http://download.wikimedia.org/mediawiki/1.20/%s' % tgzver
 
         if not exists(tgzver):
             #just run was good enough
-            sudo('wget %s' % tgzurl, user='ec2-user')
+            sudo('wget %s' % tgzurl, user=unixuser)
         else:
             pass
 
@@ -544,7 +571,7 @@ def setup_wiki():
 
                 run('pwd')
                 run('ls -tral')
-                sudo('tar -zxv -C html --strip-components 1 -f %s' % tgzver, user='ec2-user')
+                sudo('tar -zxv -C html --strip-components 1 -f %s' % tgzver, user=unixuser)
         
         #if not exists('html/.git'):
         #    run('git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git html')
@@ -568,7 +595,7 @@ def setup_wiki():
 
 
             with settings(
-                user='ec2-user',
+                user=unixadminuser,
                 ):
 
                 
@@ -629,7 +656,7 @@ def setup_wiki():
         with cd('html'):
 
             with settings(
-                user='ec2-user',
+                user=unixadminuser,
                 ):
 
                 with cd('extensions'):
@@ -664,8 +691,8 @@ def setup_wiki():
                 with cd('maintenance'):
                     run('rm -f SMW_setup.php')
                     run('rm -f SMW_refreshData.php')
-                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user='ec2-user')
-                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user='ec2-user')
+                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user=unixadminuser)
+                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=unixadminuser)
 
 
 def setup_webserver_step2():
@@ -695,7 +722,7 @@ def setup_webserver_step2():
 
 
 
-    with settings(user='ec2-user'):
+    with settings(user=unixadminuser):
         sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
         with cd('/var/www/html/maintenance'):
             if not exists(localsettingsfile):

@@ -5,12 +5,13 @@
 # sudo bootstrap.sh
 
 
-sudo yum -y install git cpan perl-JSON make rubygems subversion
+sudo yum -y install git cpan perl-JSON make rubygems subversion python-setuptools
 #bash smwcon2012bots/ec2/bootstrap.sh
 #./install-semantic-mediawiki.py --debug
 sudo gem install rest-client
 sudo gem install activesupport
 curl -L http://cpanmin.us | sudo perl - MediaWiki::API
+
 
 
 sudo easy_install pip
