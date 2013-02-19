@@ -17,7 +17,7 @@ def getsetting(name):
     conn.request("GET", "/latest/meta-data/%s" % name)
     r1 = conn.getresponse()
     result = r1.read()
-    print r1.status, r1.reason
+    print 'got',r1.status, r1.reason, name, result
     return result
 
 
@@ -31,24 +31,35 @@ def init():
     global hostip
     global wikiuser
     global userpassword
-    global wikiadminuser
-    global wikiadminpassword
+    global dbadminuser
+    global dbadminpass
     global localsettingsfile
 
     global apacheconftext
     global semsettingstext
     global robotstext
     global localsettingstext
+    global wikiAdminuser
+    global wikiAdminpass
 
 
-    hostnameinternal = getsetting('local-hostname')
-    publichostname = getsetting('public-hostname')
-    hostip = getsetting('local-ipv4')
-    userpassword = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
     dbname = 'my_smw'
+
+    publichostname = getsetting('public-hostname')
+    hostnameinternal = getsetting('local-hostname')
+    hostip = getsetting('local-ipv4')
+
+
+    dbadminuser = 'root'
+    dbadminpass = ''
+
+
     wikiuser = 'wikiuser'
-    wikiadminuser = 'root'
-    wikiadminpassword = ''
+    userpassword = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+
+    wikiAdminuser = 'wikiadmin'
+    wikiAdminpass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+
     localsettingsfile = '/var/www/html/LocalSettings.php'
 
 
@@ -56,11 +67,16 @@ def init():
         'host': hostnameinternal,
         'hostip': hostip,
         'userpassword': userpassword,
+        #'dbserver': 'localhost',#hostnameinternal,
+        'dbserver': hostnameinternal,
         'dbhost': hostnameinternal,
         'dbname': dbname,
         'wikiuser':wikiuser,
-        'wikiadminpassword': wikiadminpassword,
-        'wikiadminuser': wikiadminuser, 
+        'dbadminpass': dbadminpass,
+        'dbadminuser': dbadminuser, 
+
+        'wikiAdminuser': wikiAdminuser, 
+        'wikiAdminpass': wikiAdminpass,
         'hostname': publichostname,
         'email':'admin@example.com',
     }
@@ -241,11 +257,11 @@ ini_set( 'memory_limit', '200M' );
 
 ## Database settings
 
-$wgDBadminuser      = '%(wikiadminuser)s';
-$wgDBadminpassword  = '%(wikiadminpassword)s';
+$wgDBadminuser      = '%(wikiAdminuser)s';
+$wgDBadminpassword  = '%(wikiAdminpass)s';
 
 $wgDBtype           = "mysql";
-$wgDBserver         = "%(dbhost)s";
+$wgDBserver         = "%(dbserver)s";
 $wgDBname           = "%(dbname)s";
 $wgDBuser           = "%(wikiuser)s";
 $wgDBpassword       = "%(userpassword)s";
@@ -662,8 +678,8 @@ def setup_webserver_step2():
     print 'using password %s' % mywikipass
 
     adict = {
-        'installdbuser':wikiadminuser,
-        'installdbpass':wikiadminpassword,
+        'installdbuser':dbadminuser,
+        'installdbpass':dbadminpass,
 
         'adminuser':'Cariaso',
         'wikiname':'MySMW',
@@ -671,24 +687,23 @@ def setup_webserver_step2():
 
         'dbname':dbname,
         'dbuser':wikiuser,
+        'dbserver':hostnameinternal,
+        'wikiAdminuser': wikiAdminuser, 
+        'wikiAdminpass': wikiAdminpass,
         }
 
 
 
 
-    if True:
-            with settings(
-                user='ec2-user',
-                ):
+    with settings(user='ec2-user'):
+        sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
+        with cd('/var/www/html/maintenance'):
+            if not exists(localsettingsfile):
+                #--dbserver %(dbserver)s 
+                run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(adminuser)s' % adict)
 
-                
-                sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
-                with cd('/var/www/html/maintenance'):
-                    if not exists(localsettingsfile):
-                        run('php /var/www/html/maintenance/install.php --installdbpass "%(installdbpass)s" --installdbuser %(installdbuser)s  --scriptpath / --pass "%(userpass)s" --dbname %(dbname)s  --dbtype mysql  --dbuser %(dbuser)s  %(wikiname)s %(adminuser)s' % adict)
-
-                print "updating %s" % localsettingsfile
-                put_text_to_file(localsettingstext, localsettingsfile)
+        print "updating %s" % localsettingsfile
+        put_text_to_file(localsettingstext, localsettingsfile)
 
 
 
@@ -702,11 +717,12 @@ def setup_webserver_step2():
 
     with cd('/var/www/html/maintenance'):
         try:
-            run('php SMW_setup.php')
+            pass
+            #run('php SMW_setup.php')
         except:
             print "php SMW_setup.php crapped out"
 
-            run('php SMW_setup.php')
+            #run('php SMW_setup.php')
     run('apachectl restart')
 
 
@@ -734,8 +750,8 @@ def setup_mysql():
         #'fromdb': snpediadbname,
         #'fromhost':snpediadbmachine,
 
-        'toadminuser': wikiadminuser,
-        'toadminpass': wikiadminpassword,
+        'toadminuser': dbadminuser,
+        'toadminpass': dbadminpass,
         'todb':dbname,
         'tohost':hostnameinternal,
 
@@ -757,8 +773,14 @@ def setup_mysql():
         print "unable to create the db"
 
 
-    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(m\
-ysqlcmd)s''' % adict)                                                                                                                                                                     
+    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(mysqlcmd)s''' % adict)                                                                                                                                                                     
+
+
+    adict['toadminuser'] = wikiAdminuser
+    adict['toadminpass'] = wikiAdminpass
+
+    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(hostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
+
 
 
 def setup_httpd():
