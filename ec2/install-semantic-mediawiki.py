@@ -821,17 +821,21 @@ def main(argv=[]):
     parameters = smwinstaller.loadParameters(argv)
     if parameters.debug:
         print parameters
+        try:
+            localize()
+            setup_mysql()
+            setup_php()
+            setup_httpd()
+            setup_wiki()
+            setup_webserver_step2()
+        except Exception, e:
+            traceback.print_exc()                                                                                                                                                            
+            print "crap %s" % e
+            traceback.print_stack()
 
-        localize()
-        setup_mysql()
-        setup_php()
-        setup_httpd()
-        setup_wiki()
-        setup_webserver_step2()
 
-
-
-
+    print userpassword
+    print wikiAdminpass
 
 
 
