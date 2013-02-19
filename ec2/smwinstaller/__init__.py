@@ -87,4 +87,4 @@ def test(argv=[]):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    test(sys.argv)

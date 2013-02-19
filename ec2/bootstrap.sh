@@ -6,6 +6,8 @@
 
 
 sudo yum -y install git cpan perl-JSON make rubygems subversion
+#bash smwcon2012bots/ec2/bootstrap.sh
+#./install-semantic-mediawiki.py --debug
 sudo gem install rest-client
 sudo gem install activesupport
 curl -L http://cpanmin.us | sudo perl - MediaWiki::API
@@ -17,6 +19,7 @@ sudo yum -y install gcc autoconf python-devel python-crypto gcc
 sudo pip install fabric
 
 
+exit;
 cd ~
 #git clone git://github.com/cariaso/smwcon2012bots.git
 

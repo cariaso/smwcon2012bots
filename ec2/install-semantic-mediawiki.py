@@ -4,57 +4,69 @@
 import os.path
 import sys
 import os, errno
+import random
+import string
 
 import smwinstaller
 
 
 
+import httplib
+def getsetting(name):
+    conn = httplib.HTTPConnection('169.254.169.254')
+    conn.request("GET", "/latest/meta-data/%s" % name)
+    r1 = conn.getresponse()
+    result = r1.read()
+    print r1.status, r1.reason
+    return result
 
 
 #################################################################
 
+def init():
 
-dbname = 'my_smw'
-#import time
-#time.sleep(1)
-hostnameinternal = os.system('curl http://169.254.169.254/latest/meta-data/local-hostname')
-publichostname = os.system('curl http://169.254.169.254/latest/meta-data/public-hostname')
-hostip = os.system('curl http://169.254.169.254/latest/meta-data/local-ipv4')
-print hostnameinternal
-wikiuser = 'wikiuser'
-userpassword = 'mybadpassword'
-wikiadminuser = 'root'
-wikiadminpassword = ''
+    global dbname
+    global hostnameinternal
+    global publichostname
+    global hostip
+    global wikiuser
+    global userpassword
+    global wikiadminuser
+    global wikiadminpassword
+    global localsettingsfile
 
-
-
-
-def main(argv=[]):
-
-    parameters = smwinstaller.loadParameters(argv)
-    if parameters.debug:
-        print parameters
-
-        localize()
-        setup_mysql()
-        setup_httpd()
-        setup_php()
-        setup_wiki()
-        setup_webserver_step2()
+    global apacheconftext
+    global semsettingstext
+    global robotstext
+    global localsettingstext
 
 
+    hostnameinternal = getsetting('local-hostname')
+    publichostname = getsetting('public-hostname')
+    hostip = getsetting('local-ipv4')
+    userpassword = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    dbname = 'my_smw'
+    wikiuser = 'wikiuser'
+    wikiadminuser = 'root'
+    wikiadminpassword = ''
+    localsettingsfile = '/var/www/html/LocalSettings.php'
 
 
+    adict = {
+        'host': hostnameinternal,
+        'hostip': hostip,
+        'userpassword': userpassword,
+        'dbhost': hostnameinternal,
+        'dbname': dbname,
+        'wikiuser':wikiuser,
+        'wikiadminpassword': wikiadminpassword,
+        'wikiadminuser': wikiadminuser, 
+        'hostname': publichostname,
+        'email':'admin@example.com',
+    }
+    print adict
 
-
-
-
-
-
-
-
-
-semsettingstext = '''
+    semsettingstext = '''
 <?php
 
 /**
@@ -159,15 +171,19 @@ include_once( "$IP/extensions/SemanticMediaWiki/SemanticMediaWiki.php" );
 #require_once( "$IP/extensions/Widgets/Widgets.php" );
 #$wgGroupPermissions['sysop']['editwidgets'] = true;
 '''
-apacheconftext = '''
+
+    apacheconftext = '''
 
 '''
 
-robotstext = '''
+
+
+
+    robotstext = '''
 # robots are awesome
 '''
 
-localsettingstext = """<?php
+    localsettingstext = """<?php
 
 # Further documentation for configuration settings may be found at:
 # http://www.mediawiki.org/wiki/Manual:Configuration_settings
@@ -408,19 +424,7 @@ $sdgFiltersLargestFontSize=25;
 #$wgParserConf['preprocessorClass'] = 'Preprocessor_Hash';
 
 
-""" % {
-        'host': hostnameinternal,
-        'hostip': hostip,
-
-        'dbhost': 'localhost',
-        'userpassword': '',
-        'dbname': dbname,
-        'wikiuser':wikiuser,
-        'wikiadminpassword': '',
-        'wikiadminuser': 'root', 
-        'hostname': publichostname,
-        'email':'admin@example.com',
-    }
+""" % adict
 
                                                                                                                         
 
@@ -536,17 +540,28 @@ def setup_wiki():
                 run('git checkout origin/REL1_20')
             #google_patch_mediawiki()
 
+
+
+
+#    with cd('/var/www/html/maintenance'):
+#        if exists(localsettingsfile):
+#            run('php update.php --quick')
+#        else:
+#            run('php /var/www/html/maintenance/install.php --installdbpass "%(installdbpass)s" --installdbuser %(installdbuser)s  --scriptpath / --pass "%(userpass)s" --dbname %(dbname)s --dbserver %(dbserver)s --dbtype mysql  --dbuser %(dbuser)s  %(wikiname)s %(adminuser)s' % adict)
+
+
+
             with settings(
                 user='ec2-user',
                 ):
 
                 
                 put_text_to_file(robotstext, '/var/www/html/robots.txt')
-                localsettingsfile = '/var/www/html/LocalSettings.php'
-                if exists(localsettingsfile):
-                    print "leaving %s alone" % localsettingsfile
-                else:
-                    put_text_to_file(localsettingstext, localsettingsfile)
+#                if exists(localsettingsfile):
+#                    print "leaving %s alone" % localsettingsfile
+#                else:
+#                    print "updating %s" % localsettingsfile
+#                    put_text_to_file(localsettingstext, localsettingsfile)
 
 
                 if not exists('extensions'):
@@ -636,24 +651,53 @@ def setup_wiki():
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user='ec2-user')
                     sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user='ec2-user')
 
-import random
-import string
 
 def setup_webserver_step2():
 
+
     run('apachectl restart')
 
-    mywikipass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    #mywikipass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    mywikipass = userpassword
     print 'using password %s' % mywikipass
 
-    try:
-        with cd('/var/www/html/maintenance'):
-            run('php install.php MySMW Cariaso --pass "%s"' % mywikipass)
-    except:
-        pass
+    adict = {
+        'installdbuser':wikiadminuser,
+        'installdbpass':wikiadminpassword,
+
+        'adminuser':'Cariaso',
+        'wikiname':'MySMW',
+        'userpass':userpassword,
+
+        'dbname':dbname,
+        'dbuser':wikiuser,
+        }
+
+
+
+
+    if True:
+            with settings(
+                user='ec2-user',
+                ):
+
+                
+                sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
+                with cd('/var/www/html/maintenance'):
+                    if not exists(localsettingsfile):
+                        run('php /var/www/html/maintenance/install.php --installdbpass "%(installdbpass)s" --installdbuser %(installdbuser)s  --scriptpath / --pass "%(userpass)s" --dbname %(dbname)s  --dbtype mysql  --dbuser %(dbuser)s  %(wikiname)s %(adminuser)s' % adict)
+
+                print "updating %s" % localsettingsfile
+                put_text_to_file(localsettingstext, localsettingsfile)
+
+
+
 
     with cd('/var/www/html/maintenance'):
-        run('php update.php --quick')
+        if exists(localsettingsfile):
+            run('php update.php --quick')
+
+
             
 
     with cd('/var/www/html/maintenance'):
@@ -672,19 +716,17 @@ def setup_webserver_step2():
 
 def setup_mysql():
 
+    sudo('yum -y install mysql mysql-server', pty=True)
+    sudo('service mysqld restart', pty=True)
 
-    import httplib
-    conn = httplib.HTTPConnection('169.254.169.254')
-    conn.request("GET", "/latest/meta-data/local-hostname")
-    r1 = conn.getresponse()
-    print r1.status, r1.reason
+
     #hostnameinternal = os.system('curl http://169.254.169.254/latest/meta-data/local-hostname')
-    hostnameinternal = r1.read()
+
     #publichostname = os.system('curl http://169.254.169.254/latest/meta-data/public-hostname')
     #hostip = os.system('curl http://169.254.169.254/latest/meta-data/local-ipv4')
 
     #global hostnameinternal
-    print hostnameinternal
+    #print hostnameinternal
 
     adict = {
         #'fromadminuser': wikiadminuser,
@@ -721,6 +763,8 @@ ysqlcmd)s''' % adict)
 
 def setup_httpd():
 
+    global apacheconftext
+
     sudo('yum -y install httpd httpd-devel', pty=True)
 
     sudo("perl -p -i.bak -e 's!AddType\s+application/x-httpd-php\s+.php!!' /etc/httpd/conf/httpd.conf", pty=True)
@@ -750,7 +794,32 @@ def setup_php():
 
 
 
+def main(argv=[]):
+    init()
+    parameters = smwinstaller.loadParameters(argv)
+    if parameters.debug:
+        print parameters
+
+        localize()
+        setup_mysql()
+        setup_php()
+        setup_httpd()
+        setup_wiki()
+        setup_webserver_step2()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
+
     main(sys.argv)
