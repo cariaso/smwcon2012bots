@@ -19,12 +19,12 @@ sudo yum -y install gcc autoconf python-devel python-crypto gcc
 sudo pip install fabric
 
 
-exit;
+#exit;
 cd ~
-#git clone git://github.com/cariaso/smwcon2012bots.git
+git clone git://github.com/cariaso/smwcon2012bots.git
 
 cd smwcon2012bots/ec2
-./install-semantic-mediawiki.py --debug
+sudo ./install-semantic-mediawiki.py --debug
 
 
 
