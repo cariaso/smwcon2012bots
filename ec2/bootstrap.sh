@@ -1,13 +1,10 @@
 #!/bin/env bash
 
 
-# wget https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh
-# sudo bootstrap.sh
+# wget -O - https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh | bash
 
 
 sudo yum -y install git cpan perl-JSON make rubygems subversion python-setuptools
-#bash smwcon2012bots/ec2/bootstrap.sh
-#./install-semantic-mediawiki.py --debug
 sudo gem install rest-client
 sudo gem install activesupport
 curl -L http://cpanmin.us | sudo perl - MediaWiki::API

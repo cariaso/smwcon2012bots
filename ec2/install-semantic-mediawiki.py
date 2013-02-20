@@ -67,14 +67,21 @@ def init():
     global unixadminuser
     global unixuser
 
-
-    dbname = 'my_smw'
-    unixadminuser = 'ec2-user'
-    unixuser = 'vagrant'
+    global sysop
+    global wikiname
+    global email
 
     publichostname = getpublichostname()
     hostnameinternal = getinternalhostname()
     hostip = getip()
+
+    email = 'admin@example.com'
+    sysop = 'Cariaso'
+    wikiname = 'MySMW'
+
+    dbname = 'my_smw'
+    unixadminuser = 'ec2-user'
+    unixuser = 'vagrant'
 
 
     dbadminuser = 'root'
@@ -94,7 +101,6 @@ def init():
         'host': hostnameinternal,
         'hostip': hostip,
         'userpassword': userpassword,
-        #'dbserver': 'localhost',#hostnameinternal,
         'dbserver': hostnameinternal,
         'dbhost': hostnameinternal,
         'dbname': dbname,
@@ -105,7 +111,8 @@ def init():
         'wikiAdminuser': wikiAdminuser, 
         'wikiAdminpass': wikiAdminpass,
         'hostname': publichostname,
-        'email':'admin@example.com',
+        'email':email,
+        'wikiname':wikiname,
     }
     print adict
 
@@ -215,9 +222,7 @@ include_once( "$IP/extensions/SemanticMediaWiki/SemanticMediaWiki.php" );
 #$wgGroupPermissions['sysop']['editwidgets'] = true;
 '''
 
-    apacheconftext = '''
-
-'''
+    apacheconftext = ''
 
 
 
@@ -237,7 +242,7 @@ if ( !defined( 'MEDIAWIKI' ) ) {
         exit;
 }
 
-$wgSitename         = "MySMW";
+$wgSitename         = "%(wikiname)s";
 
 ## The URL base path to the directory containing the wiki;
 ## defaults for all runtime URL paths are based off of this.
@@ -548,10 +553,6 @@ def setup_wiki():
     sudo('yum -y install subversion git')
 
 
-    # need 7z ?
-
-
-
     with cd('/var/www'):
         sudo('chown %s:%s html'  % (unixuser, unixuser), pty=True)
 
@@ -566,7 +567,6 @@ def setup_wiki():
 
 
         if not exists('html/maintenance'):
-            #run('mkdir -p libs')
             with settings(warn_only=True):
 
                 run('pwd')
@@ -584,18 +584,8 @@ def setup_wiki():
             #google_patch_mediawiki()
 
 
-
-
-#    with cd('/var/www/html/maintenance'):
-#        if exists(localsettingsfile):
-#            run('php update.php --quick')
-#        else:
-#            run('php /var/www/html/maintenance/install.php --installdbpass "%(installdbpass)s" --installdbuser %(installdbuser)s  --scriptpath / --pass "%(userpass)s" --dbname %(dbname)s --dbserver %(dbserver)s --dbtype mysql  --dbuser %(dbuser)s  %(wikiname)s %(adminuser)s' % adict)
-
-
-
             with settings(
-                user=unixadminuser,
+                user=unixuser,
                 ):
 
                 
@@ -656,7 +646,7 @@ def setup_wiki():
         with cd('html'):
 
             with settings(
-                user=unixadminuser,
+                user=unixuser,
                 ):
 
                 with cd('extensions'):
@@ -708,8 +698,8 @@ def setup_webserver_step2():
         'installdbuser':dbadminuser,
         'installdbpass':dbadminpass,
 
-        'adminuser':'Cariaso',
-        'wikiname':'MySMW',
+        'sysop':sysop,
+        'wikiname':wikiname,
         'userpass':userpassword,
 
         'dbname':dbname,
@@ -726,8 +716,7 @@ def setup_webserver_step2():
         sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
         with cd('/var/www/html/maintenance'):
             if not exists(localsettingsfile):
-                #--dbserver %(dbserver)s 
-                run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(adminuser)s' % adict)
+                run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(sysop)s' % adict)
 
         print "updating %s" % localsettingsfile
         put_text_to_file(localsettingstext, localsettingsfile)
@@ -740,16 +729,6 @@ def setup_webserver_step2():
             run('php update.php --quick')
 
 
-            
-
-    with cd('/var/www/html/maintenance'):
-        try:
-            pass
-            #run('php SMW_setup.php')
-        except:
-            print "php SMW_setup.php crapped out"
-
-            #run('php SMW_setup.php')
     run('apachectl restart')
 
 
@@ -763,19 +742,7 @@ def setup_mysql():
     sudo('service mysqld restart', pty=True)
 
 
-    #hostnameinternal = os.system('curl http://169.254.169.254/latest/meta-data/local-hostname')
-
-    #publichostname = os.system('curl http://169.254.169.254/latest/meta-data/public-hostname')
-    #hostip = os.system('curl http://169.254.169.254/latest/meta-data/local-ipv4')
-
-    #global hostnameinternal
-    #print hostnameinternal
-
     adict = {
-        #'fromadminuser': wikiadminuser,
-        #'fromadminpass': wikiadminpassword,
-        #'fromdb': snpediadbname,
-        #'fromhost':snpediadbmachine,
 
         'toadminuser': dbadminuser,
         'toadminpass': dbadminpass,
@@ -812,8 +779,6 @@ def setup_mysql():
 
 def setup_httpd():
 
-    global apacheconftext
-
     sudo('yum -y install httpd httpd-devel', pty=True)
 
     sudo("perl -p -i.bak -e 's!AddType\s+application/x-httpd-php\s+.php!!' /etc/httpd/conf/httpd.conf", pty=True)
@@ -821,17 +786,19 @@ def setup_httpd():
 
     sudo("perl -p -i.bak -e 's!^DirectoryIndex.*!DirectoryIndex index.html index.php!' /etc/httpd/conf/httpd.conf", pty=True)
 
-    if not exists('/etc/httpd/conf.d'):
-        sudo('mkdir -p /etc/httpd/conf.d', pty=True)
 
-    localname = '/tmp/httpd-conf-semanticmediawiki.conf'
-    put_text_to_local_file(apacheconftext, localname)
+    if apacheconftext:
+        if not exists('/etc/httpd/conf.d'):
+            sudo('mkdir -p /etc/httpd/conf.d', pty=True)
 
-    try:
-        sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname,
-             pty=True)
-    except:
-        pass
+        localname = '/tmp/httpd-conf-semanticmediawiki.conf'
+        put_text_to_local_file(apacheconftext, localname)
+
+        try:
+            sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname, pty=True)
+                 
+        except:
+            pass
 
 
 
@@ -861,15 +828,8 @@ def main(argv=[]):
             traceback.print_stack()
 
 
-    print userpassword
-    print wikiAdminpass
-
-
-
-
-
-
-
+    print '%s : %s' % (sysop, userpassword)
+    print '%s : %s' % (wikiAdminuser, wikiAdminpass)
 
 
 
