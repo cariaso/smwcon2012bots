@@ -56,13 +56,16 @@ def loadParameters(argv):
                                            description="Primary Options"
                                            )
     
-    group_std1.add_argument("--yamlconfig",
-                            help="config file",
-                            type=str,
-                            )
 
+    group_mysql1 = parser.add_argument_group(title="MySQL",
+                                           description="usernames password hosts"
+                                           )
+    group_unix1 = parser.add_argument_group(title="Unix",
+                                           description="usernames paths"
+                                           )
+    
     group_std1.add_argument("--destroy",
-                            help="allowed to blow away the database and the LocalSettings.php file",
+                            help="blow away the database and the LocalSettings.php file",
                             action="store_true",
                             default=False,
                             )
@@ -85,31 +88,67 @@ def loadParameters(argv):
                             type=str,
                             default='admin@example.com',
                             )
-    group_std1.add_argument("--dbname",
-                            help='',
+
+
+    group_unix1.add_argument("--unixadminuser",
+                            help='user who can sudo',
+                            type=str,
+                            default='ec2-user')
+    group_unix1.add_argument("--unixuser",
+                            help='user who will own the unix installation',
+                            type=str,
+                            default='vagrant')
+
+
+    group_mysql1.add_argument("--dbname",
+                            help='mysql database name',
                             type=str,
                             default='my_smw',
                             )
-    group_std1.add_argument("--unixadminuser",
-                            help='',
-                            type=str,
-                            default='ec2-user')
-    group_std1.add_argument("--unixuser",
-                            help='',
-                            type=str,
-                            default='vagrant')
-    group_std1.add_argument("--dbadminuser",
-                            help='',
+    group_mysql1.add_argument("--dbadminuser",
+                            help='mysql username allowed to create tables',
                             type=str,
                             default='root')
-    group_std1.add_argument("--dbadminpass",
-                            help='',
+    group_mysql1.add_argument("--dbadminpass",
+                            help='password for dbadminuser',
                             type=str,
                             default='')
-    group_std1.add_argument("--wikiuser",
-                            help='',
+
+
+    group_mysql1.add_argument("--wikiuser",
+                            help='mysql user account',
                             type=str,
                             default='wikiuser')
+    group_mysql1.add_argument("--userpassword",
+                            help='you can override the randomly chosen ones',
+                            type=str,
+                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+                           )
+
+
+    group_mysql1.add_argument("--wikiAdminuser",
+                            help='mysql ',
+                            type=str,
+                            default='wikiadmin')
+    group_mysql1.add_argument("--wikiAdminpass",
+                            help='you can override the randomly chosen ones',
+                            type=str,
+                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+                            )
+
+
+    group_std1.add_argument("--localsettingsfile",
+                            help='',
+                            type=str,
+                            default='/var/www/html/LocalSettings.php')
+
+    group_std1.add_argument("--yamlconfig",
+                            help="this config file can replace all of the other command line settings",
+                            type=str,
+                            )
+
+
+
 
 
 
@@ -124,27 +163,6 @@ def loadParameters(argv):
                             action="store_true",
                             default=False,
                             )
-    group_std1.add_argument("--wikiAdminuser",
-                            help='',
-                            type=str,
-                            default='wikiadmin')
-    group_std1.add_argument("--localsettingsfile",
-                            help='',
-                            type=str,
-                            default='/var/www/html/LocalSettings.php')
-
-
-
-    group_std1.add_argument("--wikiAdminpass",
-                            help='',
-                            type=str,
-                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-                            )
-    group_std1.add_argument("--userpassword",
-                            help='',
-                            type=str,
-                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-                           )
 
 
 
