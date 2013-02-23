@@ -23,24 +23,31 @@ def getsetting(name):
     return result
 
 
-
+import socket
 def getpublichostname():
-    try:
-        return getsetting('public-hostname')
-    except:
-        return os.system('hostname')
+    if 'vagrant' not in socket.gethostname():
+        try:
+            return getsetting('public-hostname')
+        except:
+            pass
+
+    return socket.gethostname()
 
 def getinternalhostname():
-    try:
-        return getsetting('local-hostname')
-    except:
-        return 'localhost'
+    if 'vagrant' not in socket.gethostname():
+        try:
+            return getsetting('local-hostname')
+        except:
+            pass
+    return 'localhost'
 
 def getip():
-    try:
-        return getsetting('local-ipv4')
-    except:
-        return '127.0.0.1'
+    if 'vagrant' not in socket.gethostname():
+        try:
+            return getsetting('local-ipv4')
+        except:
+            pass
+    return '127.0.0.1'
 
 
 #################################################################
@@ -74,6 +81,11 @@ def init():
     publichostname = getpublichostname()
     hostnameinternal = getinternalhostname()
     hostip = getip()
+
+    print publichostname
+    print hostnameinternal
+    print hostip
+
 
     email = 'admin@example.com'
     sysop = 'Cariaso'
@@ -114,7 +126,7 @@ def init():
         'email':email,
         'wikiname':wikiname,
     }
-    print adict
+    #print adict
 
     semsettingstext = '''
 <?php
@@ -579,10 +591,7 @@ def setup_wiki():
         with cd('html'):
 
             if exists('.git'):
-                #run('git checkout origin/REL1_19')
                 run('git checkout origin/REL1_20')
-            #google_patch_mediawiki()
-
 
             with settings(
                 user=unixuser,
@@ -590,13 +599,6 @@ def setup_wiki():
 
                 
                 put_text_to_file(robotstext, '/var/www/html/robots.txt')
-#                if exists(localsettingsfile):
-#                    print "leaving %s alone" % localsettingsfile
-#                else:
-#                    print "updating %s" % localsettingsfile
-#                    put_text_to_file(localsettingstext, localsettingsfile)
-
-
                 if not exists('extensions'):
                     run('mkdir -p extensions')
 
@@ -643,56 +645,19 @@ def setup_wiki():
                     put_text_to_local_file(semsettingstext, semsettingsname)
 
 
-        with cd('html'):
+        with cd('html/maintenance'):
 
             with settings(
                 user=unixuser,
                 ):
 
-                with cd('extensions'):
-
-                    for extension, fetchname, gitversion in [
-                        #('SemanticMediaWiki', '1.8.x:1.8.x', '7317d89'), #'414f1d4' fails
-                        #('SemanticMediaWiki', '1.8.x', None),
-                        #('Validator', '1.0.x', None), 
-                        #('SemanticForms', None, 'REL1_20'), #
+                run('rm -f SMW_setup.php')
+                run('rm -f SMW_refreshData.php')
+                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user=unixadminuser)
+                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=unixadminuser)
 
 
-                        ]:
-
-                        with settings(warn_only=True):
-                            with cd(extension):
-                                if fetchname:
-                                    run('git fetch origin %s' % fetchname)
-                                if gitversion:
-                                    run('git checkout %s' % gitversion)
-
-
-
-
-
-
-
-
-
-
-
-
-                with cd('maintenance'):
-                    run('rm -f SMW_setup.php')
-                    run('rm -f SMW_refreshData.php')
-                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user=unixadminuser)
-                    sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=unixadminuser)
-
-
-def setup_webserver_step2():
-
-
-    run('apachectl restart')
-
-    #mywikipass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-    mywikipass = userpassword
-    print 'using password %s' % mywikipass
+def setup_webserver_step2(ALLOW_DESTROY=False):
 
     adict = {
         'installdbuser':dbadminuser,
@@ -713,8 +678,13 @@ def setup_webserver_step2():
 
 
     with settings(user=unixadminuser):
-        sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
         with cd('/var/www/html/maintenance'):
+            if ALLOW_DESTROY:
+                sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
+                run('rm -f %s' % localsettingsfile)
+            else:
+                print "I'm not allowed to overwrite your database or LocalSettings.pgp. try with --destroy"
+
             if not exists(localsettingsfile):
                 run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(sysop)s' % adict)
 
@@ -727,7 +697,6 @@ def setup_webserver_step2():
     with cd('/var/www/html/maintenance'):
         if exists(localsettingsfile):
             run('php update.php --quick')
-
 
     run('apachectl restart')
 
@@ -806,10 +775,6 @@ def setup_php():
     sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
 
 
-
-
-
-
 def main(argv=[]):
     init()
     parameters = smwinstaller.loadParameters(argv)
@@ -821,7 +786,7 @@ def main(argv=[]):
             setup_php()
             setup_httpd()
             setup_wiki()
-            setup_webserver_step2()
+            setup_webserver_step2(ALLOW_DESTROY=parameters.destroy)
         except Exception, e:
             traceback.print_exc()                                                                                                                                                            
             print "crap %s" % e

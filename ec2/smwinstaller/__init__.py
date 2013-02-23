@@ -27,6 +27,7 @@ def simpleArgParser(argv):
     parser = optparse.OptionParser()
     parser.add_option('-n', '--new', help='creates a new object')
     parser.add_option('-d', '--debug', help='debug mode')
+    parser.add_option('-d', '--destroy', help='allowed to overwrite the database and the LocalSettings.php file')
     (opts, args) = parser.parse_args()
     return opts
 
@@ -65,6 +66,12 @@ def loadParameters(argv):
     
     group_exper1.add_argument("--debug",
                             help="debug mode, helpful for developers",
+                            action="store_true",
+                            default=False,
+                            )
+
+    group_exper1.add_argument("--destroy",
+                            help="allowed to blow away the database and the LocalSettings.php file",
                             action="store_true",
                             default=False,
                             )
