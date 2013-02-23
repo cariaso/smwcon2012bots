@@ -4,7 +4,8 @@
 import os.path
 import sys
 import os, errno
-
+import random
+import string
 
 def parseYamlConfig(parameters):
     try:
