@@ -46,7 +46,7 @@ def loadParameters(argv):
 
     parser = argparse.ArgumentParser(
         description="install semantic-mediawiki",
-        epilog="Michael Cariaso"
+        epilog="Michael Cariaso "
         "cariaso@gmail.com "
         "License = http://en.wikipedia.org/wiki/WTFPL"
         )
@@ -60,6 +60,60 @@ def loadParameters(argv):
                             type=str,
                             )
 
+    group_std1.add_argument("--destroy",
+                            help="allowed to blow away the database and the LocalSettings.php file",
+                            action="store_true",
+                            default=False,
+                            )
+
+
+    group_std1.add_argument("--sysop",
+                            help="first admin user wiki username",
+                            type=str,
+                            default='WikiAdmin',
+                            )
+
+
+    group_std1.add_argument("--wikiname",
+                            help="shortname for your wiki",
+                            type=str,
+                            default='MySMW',
+                            )
+    group_std1.add_argument("--email",
+                            help="contact email address",
+                            type=str,
+                            default='admin@example.com',
+                            )
+    group_std1.add_argument("--dbname",
+                            help='',
+                            type=str,
+                            default='my_smw',
+                            )
+    group_std1.add_argument("--unixadminuser",
+                            help='',
+                            type=str,
+                            default='ec2-user')
+    group_std1.add_argument("--unixuser",
+                            help='',
+                            type=str,
+                            default='vagrant')
+    group_std1.add_argument("--dbadminuser",
+                            help='',
+                            type=str,
+                            default='root')
+    group_std1.add_argument("--dbadminpass",
+                            help='',
+                            type=str,
+                            default='')
+    group_std1.add_argument("--wikiuser",
+                            help='',
+                            type=str,
+                            default='wikiuser')
+
+
+
+
+
     group_exper1 = parser.add_argument_group(title="Experimental",
                                            description="Experimental Options"
                                            )
@@ -69,12 +123,28 @@ def loadParameters(argv):
                             action="store_true",
                             default=False,
                             )
+    group_std1.add_argument("--wikiAdminuser",
+                            help='',
+                            type=str,
+                            default='wikiadmin')
+    group_std1.add_argument("--localsettingsfile",
+                            help='',
+                            type=str,
+                            default='/var/www/html/LocalSettings.php')
 
-    group_exper1.add_argument("--destroy",
-                            help="allowed to blow away the database and the LocalSettings.php file",
-                            action="store_true",
-                            default=False,
+
+
+    group_std1.add_argument("--wikiAdminpass",
+                            help='',
+                            type=str,
+                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
                             )
+    group_std1.add_argument("--userpassword",
+                            help='',
+                            type=str,
+                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+                           )
+
 
 
     parameters, unknown = parser.parse_known_args(argv)

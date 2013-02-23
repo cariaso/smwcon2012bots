@@ -52,31 +52,27 @@ def getip():
 
 #################################################################
 
-def init():
+def init(parameters):
 
-    global dbname
+#    global dbname
     global hostnameinternal
     global publichostname
     global hostip
-    global wikiuser
-    global userpassword
-    global dbadminuser
-    global dbadminpass
-    global localsettingsfile
+    #global wikiuser
+    #global userpassword
+    #global dbadminuser
+    #global dbadminpass
+    #global localsettingsfile
 
     global apacheconftext
     global semsettingstext
     global robotstext
     global localsettingstext
-    global wikiAdminuser
-    global wikiAdminpass
+    #global wikiAdminuser
+    #global wikiAdminpass
 
-    global unixadminuser
-    global unixuser
-
-    global sysop
-    global wikiname
-    global email
+    #global unixadminuser
+    #global unixuser
 
     publichostname = getpublichostname()
     hostnameinternal = getinternalhostname()
@@ -86,45 +82,45 @@ def init():
     print hostnameinternal
     print hostip
 
-
-    email = 'admin@example.com'
-    sysop = 'Cariaso'
-    wikiname = 'MySMW'
-
-    dbname = 'my_smw'
-    unixadminuser = 'ec2-user'
-    unixuser = 'vagrant'
+#    dbname = getattr(parameters, 'dbname', 'my_smw')
+    #unixadminuser = getattr(parameters, 'unixadminuser', 'ec2-user')
+    #unixuser = getattr(parameters, 'unixuser', 'vagrant')
 
 
-    dbadminuser = 'root'
-    dbadminpass = ''
+    #dbadminuser = getattr(parameters, 'dbadminuser', 'root')
+    #dbadminpass = getattr(parameters, 'dbadminpass', '')
 
 
-    wikiuser = 'wikiuser'
-    userpassword = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    #wikiuser = getattr(parameters, 'wikiuser', 'wikiuser')
+    #userpassword = getattr(parameters, 'userpassword', 
+    #                       ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    #                       )
 
-    wikiAdminuser = 'wikiadmin'
-    wikiAdminpass = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
 
-    localsettingsfile = '/var/www/html/LocalSettings.php'
 
+    #wikiAdminuser = getattr(parameters, 'Adminuser', 'wikiadmin')
+    #wikiAdminpass = getattr(parameters, 'wikiAdminpass', 
+    #                        ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+    #                        )
+
+    #localsettingsfile = getattr(parameters, 'localsettingsfile', '/var/www/html/LocalSettings.php')
 
     adict = {
         'host': hostnameinternal,
         'hostip': hostip,
-        'userpassword': userpassword,
+        'userpassword': parameters.userpassword,
         'dbserver': hostnameinternal,
         'dbhost': hostnameinternal,
-        'dbname': dbname,
-        'wikiuser':wikiuser,
-        'dbadminpass': dbadminpass,
-        'dbadminuser': dbadminuser, 
+        'dbname': parameters.dbname,
+        'wikiuser':parameters.wikiuser,
+        'dbadminpass': parameters.dbadminpass,
+        'dbadminuser': parameters.dbadminuser, 
 
-        'wikiAdminuser': wikiAdminuser, 
-        'wikiAdminpass': wikiAdminpass,
+        'wikiAdminuser': parameters.wikiAdminuser, 
+        'wikiAdminpass': parameters.wikiAdminpass,
         'hostname': publichostname,
-        'email':email,
-        'wikiname':wikiname,
+        'email':parameters.email,
+        'wikiname':parameters.wikiname,
     }
     #print adict
 
@@ -491,7 +487,6 @@ $sdgFiltersLargestFontSize=25;
 try:
     from fabric.api import run, put, cd, lcd, env, get, sudo, settings
     from fabric.contrib.files import exists, append, contains
-    from fabric.decorators import hosts, task
     from fabric.operations import local
     import fabric
 except ImportError:
@@ -508,7 +503,7 @@ def put_text_to_file(text, filename):
         put(atmpfn, filename)
     except:
         remotefn = 'a_tmp2_file'
-        sudo('chown %s:%s %s' % (unixuser, unixuser, filename), pty=True)
+        sudo('chown %s:%s %s' % (parameters.unixuser, parameters.unixuser, filename), pty=True)
         sudo('chmod g+w %s' % filename, pty=True)
         put(atmpfn, remotefn)
         run('mv %s %s' % (remotefn, filename))
@@ -553,11 +548,11 @@ def setup_wiki():
 
     if not exists('/var/www'):
         sudo('mkdir -p /var/www')
-    sudo('chown %s:%s /var/www' % (unixuser, unixuser), pty=True)
+    sudo('chown %s:%s /var/www' % (parameters.unixuser, parameters.unixuser), pty=True)
 
     if not exists('/var/www/html'):
         sudo('mkdir -p /var/www/html')
-        sudo('chown %s:%s /var/www/html'  % (unixuser, unixuser), pty=True)
+        sudo('chown %s:%s /var/www/html'  % (parameters.unixuser, parameters.unixuser), pty=True)
 
     if exists('/var/lib/php/session'):
         sudo('chmod a+rwx /var/lib/php/session')
@@ -566,14 +561,14 @@ def setup_wiki():
 
 
     with cd('/var/www'):
-        sudo('chown %s:%s html'  % (unixuser, unixuser), pty=True)
+        sudo('chown %s:%s html'  % (parameters.unixuser, parameters.unixuser), pty=True)
 
         tgzver = 'mediawiki-1.20.2.tar.gz'
         tgzurl = 'http://download.wikimedia.org/mediawiki/1.20/%s' % tgzver
 
         if not exists(tgzver):
             #just run was good enough
-            sudo('wget %s' % tgzurl, user=unixuser)
+            sudo('wget %s' % tgzurl, user=parameters.unixuser)
         else:
             pass
 
@@ -583,7 +578,7 @@ def setup_wiki():
 
                 run('pwd')
                 run('ls -tral')
-                sudo('tar -zxv -C html --strip-components 1 -f %s' % tgzver, user=unixuser)
+                sudo('tar -zxv -C html --strip-components 1 -f %s' % tgzver, user=parameters.unixuser)
         
         #if not exists('html/.git'):
         #    run('git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git html')
@@ -594,7 +589,7 @@ def setup_wiki():
                 run('git checkout origin/REL1_20')
 
             with settings(
-                user=unixuser,
+                user=parameters.unixuser,
                 ):
 
                 
@@ -648,54 +643,54 @@ def setup_wiki():
         with cd('html/maintenance'):
 
             with settings(
-                user=unixuser,
+                user=parameters.unixuser,
                 ):
 
                 run('rm -f SMW_setup.php')
                 run('rm -f SMW_refreshData.php')
-                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user=unixadminuser)
-                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=unixadminuser)
+                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_setup.php', user=parameters.unixadminuser)
+                sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=parameters.unixadminuser)
 
 
 def setup_webserver_step2(ALLOW_DESTROY=False):
 
     adict = {
-        'installdbuser':dbadminuser,
-        'installdbpass':dbadminpass,
+        'installdbuser':parameters.dbadminuser,
+        'installdbpass':parameters.dbadminpass,
 
-        'sysop':sysop,
-        'wikiname':wikiname,
-        'userpass':userpassword,
+        'sysop':parameters.sysop,
+        'wikiname':parameters.wikiname,
+        'userpass':parameters.userpassword,
 
-        'dbname':dbname,
-        'dbuser':wikiuser,
+        'dbname':parameters.dbname,
+        'dbuser':parameters.wikiuser,
         'dbserver':hostnameinternal,
-        'wikiAdminuser': wikiAdminuser, 
-        'wikiAdminpass': wikiAdminpass,
+        'wikiAdminuser': parameters.wikiAdminuser, 
+        'wikiAdminpass': parameters.wikiAdminpass,
         }
 
 
 
 
-    with settings(user=unixadminuser):
+    with settings(user=parameters.unixadminuser):
         with cd('/var/www/html/maintenance'):
             if ALLOW_DESTROY:
                 sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
-                run('rm -f %s' % localsettingsfile)
+                run('rm -f %s' % parameters.localsettingsfile)
             else:
                 print "I'm not allowed to overwrite your database or LocalSettings.pgp. try with --destroy"
 
-            if not exists(localsettingsfile):
+            if not exists(parameters.localsettingsfile):
                 run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(sysop)s' % adict)
 
-        print "updating %s" % localsettingsfile
-        put_text_to_file(localsettingstext, localsettingsfile)
+        print "updating %s" % parameters.localsettingsfile
+        put_text_to_file(localsettingstext, parameters.localsettingsfile)
 
 
 
 
     with cd('/var/www/html/maintenance'):
-        if exists(localsettingsfile):
+        if exists(parameters.localsettingsfile):
             run('php update.php --quick')
 
     run('apachectl restart')
@@ -713,13 +708,13 @@ def setup_mysql():
 
     adict = {
 
-        'toadminuser': dbadminuser,
-        'toadminpass': dbadminpass,
-        'todb':dbname,
+        'toadminuser': parameters.dbadminuser,
+        'toadminpass': parameters.dbadminpass,
+        'todb':parameters.dbname,
         'tohost':hostnameinternal,
 
-        'wikiusername': wikiuser,
-        'wikiuserpass': userpassword,
+        'wikiusername': parameters.wikiuser,
+        'wikiuserpass': parameters.userpassword,
         'hostinternal': hostnameinternal,
 
 
@@ -739,8 +734,8 @@ def setup_mysql():
     run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(mysqlcmd)s''' % adict)                                                                                                                                                                     
 
 
-    adict['toadminuser'] = wikiAdminuser
-    adict['toadminpass'] = wikiAdminpass
+    adict['toadminuser'] = parameters.wikiAdminuser
+    adict['toadminpass'] = parameters.wikiAdminpass
 
     run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(hostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
 
@@ -776,25 +771,24 @@ def setup_php():
 
 
 def main(argv=[]):
-    init()
     parameters = smwinstaller.loadParameters(argv)
+    init(parameters)
     if parameters.debug:
         print parameters
-        try:
-            localize()
-            setup_mysql()
-            setup_php()
-            setup_httpd()
-            setup_wiki()
-            setup_webserver_step2(ALLOW_DESTROY=parameters.destroy)
-        except Exception, e:
-            traceback.print_exc()                                                                                                                                                            
-            print "crap %s" % e
-            traceback.print_stack()
+    try:
+        localize()
+        setup_mysql()
+        setup_php()
+        setup_httpd()
+        setup_wiki()
+        setup_webserver_step2(ALLOW_DESTROY=parameters.destroy)
+    except Exception, e:
+        traceback.print_exc()                                                                                                                                                            
+        print "Exception: %s" % e
+        traceback.print_stack()
 
-
-    print '%s : %s' % (sysop, userpassword)
-    print '%s : %s' % (wikiAdminuser, wikiAdminpass)
+    print 'sysop: %s : %s' % (parameters.sysop, parameters.userpassword)
+    print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
 
 
 
