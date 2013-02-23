@@ -54,25 +54,14 @@ def getip():
 
 def init(parameters):
 
-#    global dbname
     global hostnameinternal
     global publichostname
     global hostip
-    #global wikiuser
-    #global userpassword
-    #global dbadminuser
-    #global dbadminpass
-    #global localsettingsfile
 
     global apacheconftext
     global semsettingstext
     global robotstext
     global localsettingstext
-    #global wikiAdminuser
-    #global wikiAdminpass
-
-    #global unixadminuser
-    #global unixuser
 
     publichostname = getpublichostname()
     hostnameinternal = getinternalhostname()
@@ -81,29 +70,6 @@ def init(parameters):
     print publichostname
     print hostnameinternal
     print hostip
-
-#    dbname = getattr(parameters, 'dbname', 'my_smw')
-    #unixadminuser = getattr(parameters, 'unixadminuser', 'ec2-user')
-    #unixuser = getattr(parameters, 'unixuser', 'vagrant')
-
-
-    #dbadminuser = getattr(parameters, 'dbadminuser', 'root')
-    #dbadminpass = getattr(parameters, 'dbadminpass', '')
-
-
-    #wikiuser = getattr(parameters, 'wikiuser', 'wikiuser')
-    #userpassword = getattr(parameters, 'userpassword', 
-    #                       ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-    #                       )
-
-
-
-    #wikiAdminuser = getattr(parameters, 'Adminuser', 'wikiadmin')
-    #wikiAdminpass = getattr(parameters, 'wikiAdminpass', 
-    #                        ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-    #                        )
-
-    #localsettingsfile = getattr(parameters, 'localsettingsfile', '/var/www/html/LocalSettings.php')
 
     adict = {
         'host': hostnameinternal,
