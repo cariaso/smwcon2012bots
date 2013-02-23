@@ -71,13 +71,6 @@ def loadParameters(argv):
                             )
 
 
-    group_std1.add_argument("--sysop",
-                            help="first admin user wiki username",
-                            type=str,
-                            default='WikiAdmin',
-                            )
-
-
     group_std1.add_argument("--wikiname",
                             help="shortname for your wiki",
                             type=str,
@@ -88,6 +81,13 @@ def loadParameters(argv):
                             type=str,
                             default='admin@example.com',
                             )
+
+    group_std1.add_argument("--sysop",
+                            help="first admin user wiki username",
+                            type=str,
+                            default='WikiAdmin',
+                            )
+
 
 
     group_unix1.add_argument("--unixadminuser",
@@ -105,8 +105,9 @@ def loadParameters(argv):
                             type=str,
                             default='my_smw',
                             )
+
     group_mysql1.add_argument("--dbadminuser",
-                            help='mysql username allowed to create tables',
+                            help='mysql username allowed to create other users',
                             type=str,
                             default='root')
     group_mysql1.add_argument("--dbadminpass",
@@ -115,8 +116,18 @@ def loadParameters(argv):
                             default='')
 
 
+    group_mysql1.add_argument("--wikiAdminuser",
+                            help='this mysql account will be created and given the ability to create tables',
+                            type=str,
+                            default='wikiadmin')
+    group_mysql1.add_argument("--wikiAdminpass",
+                            help='you can override the randomly chosen one',
+                            type=str,
+                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+                            )
+
     group_mysql1.add_argument("--wikiuser",
-                            help='mysql user account',
+                            help='this mysql is used by the wiki to read and write to the database',
                             type=str,
                             default='wikiuser')
     group_mysql1.add_argument("--userpassword",
@@ -125,16 +136,6 @@ def loadParameters(argv):
                             default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
                            )
 
-
-    group_mysql1.add_argument("--wikiAdminuser",
-                            help='mysql ',
-                            type=str,
-                            default='wikiadmin')
-    group_mysql1.add_argument("--wikiAdminpass",
-                            help='you can override the randomly chosen ones',
-                            type=str,
-                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-                            )
 
 
     group_std1.add_argument("--localsettingsfile",
