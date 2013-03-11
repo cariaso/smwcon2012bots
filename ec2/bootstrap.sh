@@ -1,33 +1,6 @@
 #!/bin/env bash
 
-
-# wget -O - https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh | bash
-
-
-sudo yum -y install git cpan perl-JSON make rubygems subversion python-setuptools
-sudo gem install rest-client
-sudo gem install activesupport
-curl -L http://cpanmin.us | sudo perl - MediaWiki::API
-
-
-
-sudo easy_install pip
-sudo pip install argparse
-sudo yum -y install gcc autoconf gmp gmp-devel gmp-static python-devel python-crypto gcc
-sudo pip install fabric
-
-
-#exit;
-cd ~
-git clone git://github.com/cariaso/smwcon2012bots.git
-
-cd smwcon2012bots/ec2
-sudo ./install-semantic-mediawiki.py --debug
-
-
-
-
-
+echo "This tool is intentionally disabled"
 exit
 # Do I need to explain that this is not secure?
 # is it ONLY for setting up an ec2 which will live for ~1hr
