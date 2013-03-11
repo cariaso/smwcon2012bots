@@ -1,6 +1,33 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# If port forwarding isn't working
+# and you see a message like 
+#
+#Michaels-MacBook-Pro:ec2 cariaso$ vagrant up
+#[default] Importing base box 'scientific'...
+#[default] The guest additions on this VM do not match the install version of
+#VirtualBox! This may cause things such as forwarded ports, shared
+#folders, and more to not work properly. If any of those things fail on
+#this machine, please update the guest additions and repackage the
+#box.
+#
+#Guest Additions Version: 4.1.0
+#VirtualBox Version: 4.2.8
+#
+#
+# if you installed Vagrant as a package (rpm, deb, dmg,…)
+#
+# vagrant gem install vagrant-vbguest
+# Or if you installed vagrant using RubyGems (gem install vagrant):
+#
+# gem install vagrant-vbguest
+#
+#
+# http://blog.csanchez.org/2012/05/03/automatically-download-and-install-virtualbox-guest-additions-in-vagrant/
+
+
+
 
 Vagrant::Config.run do |config|
   # All Vagrant configuration is done here. The most common configuration
