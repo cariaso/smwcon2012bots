@@ -449,6 +449,7 @@ def main(argv=[]):
 
     print 'sysop: %s : %s' % (parameters.sysop, parameters.userpassword)
     print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
+    print 'url: %s ' % getpublichostname
 
 
 
