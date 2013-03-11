@@ -19,7 +19,7 @@ def getsetting(name):
     #socket.error
     r1 = conn.getresponse()
     result = r1.read()
-    print 'got',r1.status, r1.reason, name, result
+    #print 'got',r1.status, r1.reason, name, result
     return result
 
 
