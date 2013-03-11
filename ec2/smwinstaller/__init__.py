@@ -89,15 +89,15 @@ def loadParameters(argv):
                             )
 
 
-
+    
     group_unix1.add_argument("--unixadminuser",
                             help='user who can sudo',
                             type=str,
-                            default='ec2-user')
+                            default=os.getusername())
     group_unix1.add_argument("--unixuser",
                             help='user who will own the unix installation',
                             type=str,
-                            default='vagrant')
+                            default=os.getusername())
 
 
     group_mysql1.add_argument("--dbname",
