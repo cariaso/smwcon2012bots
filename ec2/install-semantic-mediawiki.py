@@ -405,20 +405,26 @@ def setup_bots(parameters=None):
     if parameters is None:
         parameters={}
 
-    sudo('yum -y install rubygems')
-    sudo('gem install rest-client')
-    sudo('gem install activesupport')
+    with settings(warn_only=True):
+        sudo('yum -y install rubygems')
+        sudo('gem install rest-client')
+        sudo('gem install activesupport')
 
 
-    sudo('yum -y install git cpan perl-JSON make subversion')
-    sudo('gem install rest-client')
-    sudo('gem install activesupport')
-    sudo('curl -L http://cpanmin.us | perl - MediaWiki::API')
+    with settings(warn_only=True):
 
-    sudo('yum -y install gcc autoconf gmp gmp-devel gmp-static python-devel python-crypto gcc python-setuptools')
-    sudo('easy_install pip')
-    sudo('pip install argparse')
-    sudo('pip install fabric')
+        sudo('yum -y install git cpan perl-JSON make subversion')
+        sudo('gem install rest-client')
+        sudo('gem install activesupport')
+        sudo('curl -L http://cpanmin.us | perl - MediaWiki::API')
+
+    with settings(warn_only=True):
+
+        sudo('yum -y install gcc autoconf gmp gmp-devel gmp-static python-devel python-crypto gcc python-setuptools')
+        sudo('easy_install pip')
+        sudo('pip install argparse')
+        sudo('pip install fabric')
+
 
 
 
