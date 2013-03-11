@@ -166,7 +166,9 @@ def localize():
     cd = lcd
 
 
-def setup_wiki():
+def setup_wiki(parameters=None):
+    if parameters is None:
+        parameters={}
 
     
 
@@ -276,8 +278,11 @@ def setup_wiki():
                 sudo('ln -s ../extensions/SemanticMediaWiki/maintenance/SMW_refreshData.php', user=parameters.unixadminuser)
 
 
-def setup_webserver_step2(ALLOW_DESTROY=False):
+def setup_webserver_step2(parameters=None):
+    if parameters is None:
+        parameters={}
 
+    ALLOW_DESTROY=parameters.destroy
     adict = {
         'installdbuser':parameters.dbadminuser,
         'installdbpass':parameters.dbadminpass,
@@ -326,7 +331,7 @@ def setup_webserver_step2(ALLOW_DESTROY=False):
 
 def setup_mysql(parameters=None):
     if parameters is None:
-            parameters={}
+        parameters={}
 
     sudo('yum -y install mysql mysql-server', pty=True)
     sudo('service mysqld restart', pty=True)
@@ -406,8 +411,8 @@ def main(argv=[]):
         setup_mysql(parameters)
         setup_php()
         setup_httpd()
-        setup_wiki()
-        setup_webserver_step2(ALLOW_DESTROY=parameters.destroy)
+        setup_wiki(parameters)
+        setup_webserver_step2(parameters)
     except Exception, e:
         traceback.print_exc()                                                                                                                                                            
         print "Exception: %s" % e
