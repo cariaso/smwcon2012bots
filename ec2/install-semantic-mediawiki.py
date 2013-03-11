@@ -324,7 +324,9 @@ def setup_webserver_step2(ALLOW_DESTROY=False):
 
 
 
-def setup_mysql():
+def setup_mysql(parameters=None):
+    if parameters is None:
+            parameters={}
 
     sudo('yum -y install mysql mysql-server', pty=True)
     sudo('service mysqld restart', pty=True)
@@ -401,7 +403,7 @@ def main(argv=[]):
         print parameters
     try:
         localize()
-        setup_mysql()
+        setup_mysql(parameters)
         setup_php()
         setup_httpd()
         setup_wiki()
