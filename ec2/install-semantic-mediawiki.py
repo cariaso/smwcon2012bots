@@ -166,6 +166,80 @@ def localize():
     cd = lcd
 
 
+def setup_mysql(parameters=None):
+    if parameters is None:
+        parameters={}
+
+    sudo('yum -y install mysql mysql-server', pty=True)
+    sudo('service mysqld restart', pty=True)
+
+
+    adict = {
+
+        'toadminuser': parameters.dbadminuser,
+        'toadminpass': parameters.dbadminpass,
+        'todb':parameters.dbname,
+        'tohost':hostnameinternal,
+
+        'wikiusername': parameters.wikiuser,
+        'wikiuserpass': parameters.userpassword,
+        'hostinternal': hostnameinternal,
+
+
+
+        }
+
+    #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
+    mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' ''' % adict
+    adict['mysqlcmd'] = mysqlcmd
+
+    try:
+        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)                                                                                                                       
+    except:
+        print "unable to create the db"
+
+
+    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(mysqlcmd)s''' % adict)                                                                                                                                                                     
+
+
+    adict['toadminuser'] = parameters.wikiAdminuser
+    adict['toadminpass'] = parameters.wikiAdminpass
+
+    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(hostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
+
+
+def setup_php():
+    sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
+
+def setup_httpd():
+
+    sudo('yum -y install httpd httpd-devel', pty=True)
+
+    sudo("perl -p -i.bak -e 's!AddType\s+application/x-httpd-php\s+.php!!' /etc/httpd/conf/httpd.conf", pty=True)
+    sudo("perl -p -i.bak -e 's!(AddType\s+application/x-tar\s+\.tgz)!$1\\nAddType application/x-httpd-php .php!' /etc/httpd/conf/httpd.conf", pty=True)
+
+    sudo("perl -p -i.bak -e 's!^DirectoryIndex.*!DirectoryIndex index.html index.php!' /etc/httpd/conf/httpd.conf", pty=True)
+
+
+    if apacheconftext:
+        if not exists('/etc/httpd/conf.d'):
+            sudo('mkdir -p /etc/httpd/conf.d', pty=True)
+
+        localname = '/tmp/httpd-conf-semanticmediawiki.conf'
+        put_text_to_local_file(apacheconftext, localname)
+
+        try:
+            sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname, pty=True)
+                 
+        except:
+            pass
+
+
+
+
+
+
+
 def setup_wiki(parameters=None):
     if parameters is None:
         parameters={}
@@ -329,93 +403,14 @@ def setup_webserver_step2(parameters=None):
 
 
 
-def setup_mysql(parameters=None):
-    if parameters is None:
-        parameters={}
-
-    sudo('yum -y install mysql mysql-server', pty=True)
-    sudo('service mysqld restart', pty=True)
-
-
-    adict = {
-
-        'toadminuser': parameters.dbadminuser,
-        'toadminpass': parameters.dbadminpass,
-        'todb':parameters.dbname,
-        'tohost':hostnameinternal,
-
-        'wikiusername': parameters.wikiuser,
-        'wikiuserpass': parameters.userpassword,
-        'hostinternal': hostnameinternal,
-
-
-
-        }
-
-    #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
-    mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' ''' % adict
-    adict['mysqlcmd'] = mysqlcmd
-
-    try:
-        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)                                                                                                                       
-    except:
-        print "unable to create the db"
-
-
-    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(mysqlcmd)s''' % adict)                                                                                                                                                                     
-
-
-    adict['toadminuser'] = parameters.wikiAdminuser
-    adict['toadminpass'] = parameters.wikiAdminpass
-
-    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(hostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
-
-
-
-def setup_httpd():
-
-    sudo('yum -y install httpd httpd-devel', pty=True)
-
-    sudo("perl -p -i.bak -e 's!AddType\s+application/x-httpd-php\s+.php!!' /etc/httpd/conf/httpd.conf", pty=True)
-    sudo("perl -p -i.bak -e 's!(AddType\s+application/x-tar\s+\.tgz)!$1\\nAddType application/x-httpd-php .php!' /etc/httpd/conf/httpd.conf", pty=True)
-
-    sudo("perl -p -i.bak -e 's!^DirectoryIndex.*!DirectoryIndex index.html index.php!' /etc/httpd/conf/httpd.conf", pty=True)
-
-
-    if apacheconftext:
-        if not exists('/etc/httpd/conf.d'):
-            sudo('mkdir -p /etc/httpd/conf.d', pty=True)
-
-        localname = '/tmp/httpd-conf-semanticmediawiki.conf'
-        put_text_to_local_file(apacheconftext, localname)
-
-        try:
-            sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname, pty=True)
-                 
-        except:
-            pass
-
-
-
-def setup_php():
-    sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
-
 
 def setup_bots(parameters=None):
     if parameters is None:
         parameters={}
 
     with settings(warn_only=True):
-        sudo('yum -y install rubygems')
-        sudo('gem install rest-client')
-        sudo('gem install activesupport')
-
-
-    with settings(warn_only=True):
 
         sudo('yum -y install git cpan perl-JSON make subversion')
-        sudo('gem install rest-client')
-        sudo('gem install activesupport')
         sudo('curl -L http://cpanmin.us | perl - MediaWiki::API')
 
     with settings(warn_only=True):
@@ -424,6 +419,12 @@ def setup_bots(parameters=None):
         sudo('easy_install pip')
         sudo('pip install argparse')
         sudo('pip install fabric')
+
+    with settings(warn_only=True):
+        sudo('yum -y install rubygems')
+        sudo('gem install rest-client')
+        sudo('gem install activesupport')
+
 
 
 
