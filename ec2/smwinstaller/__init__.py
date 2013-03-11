@@ -6,6 +6,7 @@ import sys
 import os, errno
 import random
 import string
+import getpass
 
 def parseYamlConfig(parameters):
     try:
@@ -93,11 +94,11 @@ def loadParameters(argv):
     group_unix1.add_argument("--unixadminuser",
                             help='user who can sudo',
                             type=str,
-                            default=os.getusername())
+                            default=getpass.getuser())
     group_unix1.add_argument("--unixuser",
                             help='user who will own the unix installation',
                             type=str,
-                            default=os.getusername())
+                            default=getpass.getuser())
 
 
     group_mysql1.add_argument("--dbname",
