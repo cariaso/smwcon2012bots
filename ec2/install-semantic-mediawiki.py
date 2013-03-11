@@ -447,9 +447,10 @@ def main(argv=[]):
         print "Exception: %s" % e
         traceback.print_stack()
 
+    host = getpublichostname()
     print 'sysop: %s : %s' % (parameters.sysop, parameters.userpassword)
     print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
-    print 'url: %s ' % getpublichostname()
+    print 'url: http://%s ' % host 
 
 
 
