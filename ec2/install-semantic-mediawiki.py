@@ -435,7 +435,11 @@ def main(argv=[]):
     if parameters.debug:
         print parameters
     try:
-        localize()
+
+        if parameters.local:
+            localize()
+
+
         setup_mysql(parameters)
         setup_php()
         setup_httpd()
@@ -448,8 +452,8 @@ def main(argv=[]):
         traceback.print_stack()
 
     host = getpublichostname()
-    print 'sysop: %s : %s' % (parameters.sysop, parameters.userpassword)
     print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
+    print 'wiki: %s : %s' % (parameters.sysop, parameters.userpassword)
     print 'url: http://%s ' % host 
 
 

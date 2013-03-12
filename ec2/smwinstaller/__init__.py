@@ -64,7 +64,31 @@ def loadParameters(argv):
     group_unix1 = parser.add_argument_group(title="Unix",
                                            description="usernames paths"
                                            )
+    group_remote1 = parser.add_argument_group(title="Remote",
+                                           description="Remote host installation"
+                                           )
     
+
+    group_remote1.add_argument("--remote",
+                               help="Look for the other --remote options",
+                               dest='local',   
+                               action="store_false",
+                               #default=True,
+                               )
+
+    group_remote1.add_argument("--local",
+                               help="do a local install",
+                               dest='local',   
+                               action="store_true",
+                               #default=False,
+                               )
+
+    group_remote1.add_argument("--remote-host",
+                            help="machine to install on",
+                            type=str,
+                            )
+
+
     group_std1.add_argument("--destroy",
                             help="blow away the database and the LocalSettings.php file",
                             action="store_true",
