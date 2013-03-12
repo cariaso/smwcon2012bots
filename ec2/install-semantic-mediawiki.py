@@ -59,7 +59,22 @@ def loadtemplate(templatefn):
     return text
 
 
+
+
+
+try:
+    from fabric.api import run, put, cd, lcd, env, get, sudo, settings
+    from fabric.contrib.files import exists, append, contains
+    from fabric.operations import local
+    import fabric
+except ImportError:
+    print 'without fabric this program is a bit limited. try "pip install fabric"'
+
+
+
+
 def init(parameters):
+
 
     global hostnameinternal
     global publichostname
@@ -70,9 +85,52 @@ def init(parameters):
     global robotstext
     global localsettingstext
 
-    publichostname = getpublichostname()
-    hostnameinternal = getinternalhostname()
-    hostip = getip()
+    if parameters.local:
+        publichostname = getpublichostname()
+        hostnameinternal = getinternalhostname()
+        hostip = getip()
+        localize()
+
+    else:
+
+        if parameters.remote:
+            from urlparse import urlparse
+            parsed = urlparse('http://%s' % parameters.remote)
+            if parsed.username:
+                env.user = parsed.username
+                if parameters.unixuser is None:
+                    parameters.unixuser = parsed.username
+                if parameters.unixadminuser is None:
+                    parameters.unixadminuser = parsed.username
+
+            if parsed.password:
+                env.password = parsed.password
+            if parsed.hostname:
+                env.host_string = parsed.hostname
+                env.host = parsed.hostname
+                env.hosts = [parsed.hostname]
+            if parsed.port:
+                env.port = parsed.port
+
+
+
+            print env
+
+        publichostname = env.host
+        hostnameinternal = env.host
+        hostip = '127.0.0.1'
+
+        
+
+
+    if parameters.unixuser is None:
+        parameters.unixuser = getpass.getuser()
+    if parameters.unixadminuser is None:
+        parameters.unixadminuser = getpass.getuser()
+
+    print parameters.unixuser
+    print parameters.unixadminuser
+
 
     print publichostname
     print hostnameinternal
@@ -107,14 +165,6 @@ def init(parameters):
 
 
                                                                                                                         
-
-try:
-    from fabric.api import run, put, cd, lcd, env, get, sudo, settings
-    from fabric.contrib.files import exists, append, contains
-    from fabric.operations import local
-    import fabric
-except ImportError:
-    print 'without fabric this program is a bit limited. try "pip install fabric"'
 
 
 def put_text_to_file(text, filename):
@@ -434,11 +484,8 @@ def main(argv=[]):
     init(parameters)
     if parameters.debug:
         print parameters
+
     try:
-
-        if parameters.local:
-            localize()
-
 
         setup_mysql(parameters)
         setup_php()
@@ -451,10 +498,10 @@ def main(argv=[]):
         print "Exception: %s" % e
         traceback.print_stack()
 
-    host = getpublichostname()
+    
     print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
     print 'wiki: %s : %s' % (parameters.sysop, parameters.userpassword)
-    print 'url: http://%s ' % host 
+    print 'url: http://%s ' % publichostname
 
 
 

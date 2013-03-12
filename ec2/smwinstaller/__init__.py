@@ -69,22 +69,15 @@ def loadParameters(argv):
                                            )
     
 
-    group_remote1.add_argument("--remote",
-                               help="Look for the other --remote options",
-                               dest='local',   
-                               action="store_false",
-                               #default=True,
-                               )
 
     group_remote1.add_argument("--local",
                                help="do a local install",
-                               dest='local',   
                                action="store_true",
-                               #default=False,
+                               default=False,
                                )
 
-    group_remote1.add_argument("--remote-host",
-                            help="machine to install on",
+    group_remote1.add_argument("--remote",
+                            help="user:password@machine:port all fields are optional",
                             type=str,
                             )
 
@@ -118,11 +111,13 @@ def loadParameters(argv):
     group_unix1.add_argument("--unixadminuser",
                             help='user who can sudo',
                             type=str,
-                            default=getpass.getuser())
+                            #default=getpass.getuser()
+                             )
     group_unix1.add_argument("--unixuser",
                             help='user who will own the unix installation',
                             type=str,
-                            default=getpass.getuser())
+                            #default=getpass.getuser()
+                             )
 
 
     group_mysql1.add_argument("--dbname",
