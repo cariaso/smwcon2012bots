@@ -190,7 +190,7 @@ def setup_mysql(parameters=None):
         }
 
     #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
-    mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' ''' % adict
+    mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\'' % adict
     adict['mysqlcmd'] = mysqlcmd
 
     try:
