@@ -276,7 +276,7 @@ def setup_httpd():
             sudo('mkdir -p /etc/httpd/conf.d', pty=True)
 
         localname = '/tmp/httpd-conf-semanticmediawiki.conf'
-        put_text_to_local_file(apacheconftext, localname)
+        put_text_to_file(apacheconftext, localname)
 
         try:
             sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname, pty=True)
@@ -387,7 +387,7 @@ def setup_wiki(parameters=None):
 
 
                     semsettingsname = '/var/www/html/extensions/SemanticBundle/SemanticBundleSettings.php'
-                    put_text_to_local_file(semsettingstext, semsettingsname)
+                    put_text_to_file(semsettingstext, semsettingsname)
 
 
         with cd('html/maintenance'):
