@@ -7,7 +7,7 @@ sudo pip install fabric
 
 git clone git://github.com/cariaso/smwcon2012bots.git
 cd smwcon2012bots/ec2
-./install-semantic-mediawiki.py --debug
+./install-semantic-mediawiki.py --debug --local
 
 exit;
 
