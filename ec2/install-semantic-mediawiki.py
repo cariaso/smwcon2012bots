@@ -7,6 +7,7 @@ import os, errno
 import random
 import string
 import traceback
+import getpass
 
 import smwinstaller
 
