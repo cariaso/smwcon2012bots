@@ -6,15 +6,21 @@ http://semantic-mediawiki.org/wiki/SMWCon_Spring_2012
 Slides:
 https://docs.google.com/presentation/d/1n7OWmtPxjLkVcXzR6C9YnOrr9tNcvF5BFd69oXZ4g2Y/edit
 
-Fast way to install SMW from inside a disposable centos/redhat
+Install SMW from inside a disposable centos/redhat
  wget -O - https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh | sudo bash
 
-Experimental Fast way to install SMW on a remote disposable centos
+Install SMW on a remote disposable centos
  git clone git://github.com/cariaso/smwcon2012bots.git
  cd smwcon2012bots/ec2
  ./install-semantic-mediawiki.py --remote user@host
 
+On a local vagrant
+ git clone git://github.com/cariaso/smwcon2012bots.git
+ cd smwcon2012bots/ec2
+ vagrant up
+ ./install-semantic-mediawiki.py --remote vagrant:vagrant@127.0.0.1:5622
 
 
-On Redhat I needed to get pass the firewall. this is the easiest quick fix
+
+On Redhat I needed to get past the firewall. this is the easiest quick fix
  /etc/init.d/iptables stop
