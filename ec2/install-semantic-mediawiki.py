@@ -3,7 +3,8 @@
 
 import os.path
 import sys
-import os, errno
+import os
+import errno
 import random
 import string
 import traceback
@@ -11,10 +12,17 @@ import getpass
 
 import smwinstaller
 
-
-
+import socket
 import httplib
+
+
 def getsetting(name):
+    result = run("wget -O - http://169.254.169.254/latest/meta-data/%s 2> /dev/null" % name)
+    return result
+
+
+def getsettingold(name):
+    # can't respect localize()
     conn = httplib.HTTPConnection('169.254.169.254')
     conn.request("GET", "/latest/meta-data/%s" % name)
     #socket.error
@@ -24,7 +32,6 @@ def getsetting(name):
     return result
 
 
-import socket
 def getpublichostname():
     if 'vagrant' not in socket.gethostname():
         try:
@@ -34,6 +41,7 @@ def getpublichostname():
 
     return socket.gethostname()
 
+
 def getinternalhostname():
     if 'vagrant' not in socket.gethostname():
         try:
@@ -41,6 +49,7 @@ def getinternalhostname():
         except:
             pass
     return 'localhost'
+
 
 def getip():
     if 'vagrant' not in socket.gethostname():
@@ -54,13 +63,10 @@ def getip():
 #################################################################
 
 def loadtemplate(templatefn):
-    afile = file(templatefn,'r')
+    afile = file(templatefn, 'r')
     text = afile.read()
     afile.close()
     return text
-
-
-
 
 
 try:
@@ -72,10 +78,7 @@ except ImportError:
     print 'without fabric this program is a bit limited. try "pip install fabric"'
 
 
-
-
 def init(parameters):
-
 
     global hostnameinternal
     global publichostname
@@ -87,10 +90,10 @@ def init(parameters):
     global localsettingstext
 
     if parameters.local:
+        localize()
         publichostname = getpublichostname()
         hostnameinternal = getinternalhostname()
         hostip = getip()
-        localize()
 
     else:
 
@@ -113,16 +116,11 @@ def init(parameters):
             if parsed.port:
                 env.port = parsed.port
 
-
-
             print env
 
         publichostname = env.host
-        hostnameinternal = env.host
-        hostip = '127.0.0.1'
-
-        
-
+        hostnameinternal = getinternalhostname()
+        hostip = getip()
 
     if parameters.unixuser is None:
         parameters.unixuser = getpass.getuser()
@@ -131,7 +129,6 @@ def init(parameters):
 
     print parameters.unixuser
     print parameters.unixadminuser
-
 
     print publichostname
     print hostnameinternal
@@ -144,28 +141,28 @@ def init(parameters):
         'dbserver': hostnameinternal,
         'dbhost': hostnameinternal,
         'dbname': parameters.dbname,
-        'wikiuser':parameters.wikiuser,
+        'wikiuser': parameters.wikiuser,
         'dbadminpass': parameters.dbadminpass,
-        'dbadminuser': parameters.dbadminuser, 
+        'dbadminuser': parameters.dbadminuser,
 
-        'wikiAdminuser': parameters.wikiAdminuser, 
+        'wikiAdminuser': parameters.wikiAdminuser,
         'wikiAdminpass': parameters.wikiAdminpass,
         'hostname': publichostname,
-        'email':parameters.email,
-        'wikiname':parameters.wikiname,
+        'email': parameters.email,
+        'wikiname': parameters.wikiname,
     }
     #print adict
 
     templatedir = 'templates'
-    semsettingstemplatefn = os.path.join(templatedir, 'semanticsettings.template')
+    semsettingstemplatefn = os.path.join(
+        templatedir, 'semanticsettings.template')
     semsettingstext = loadtemplate(semsettingstemplatefn) % adict
-    localsettingstext = loadtemplate(os.path.join(templatedir, 'localsettings.template')) % adict
-    robotstext = loadtemplate(os.path.join(templatedir, 'robots.template')) % adict
+    localsettingstext = loadtemplate(
+        os.path.join(templatedir, 'localsettings.template')) % adict
+    robotstext = loadtemplate(
+        os.path.join(templatedir, 'robots.template')) % adict
 
     apacheconftext = ''
-
-
-                                                                                                                        
 
 
 def put_text_to_file(text, filename):
@@ -178,7 +175,8 @@ def put_text_to_file(text, filename):
         put(atmpfn, filename)
     except:
         remotefn = 'a_tmp2_file'
-        sudo('chown %s:%s %s' % (parameters.unixuser, parameters.unixuser, filename), pty=True)
+        sudo('chown %s:%s %s' % (parameters.unixuser,
+             parameters.unixuser, filename), pty=True)
         sudo('chmod g+w %s' % filename, pty=True)
         put(atmpfn, remotefn)
         run('mv %s %s' % (remotefn, filename))
@@ -201,14 +199,15 @@ def localize():
 
     #orig_run = run
 
-
     orig_sudo = sudo
+
     def sudo(cmd, pty=None, user=None):
         return local(cmd)
 
     orig_exists = exists
+
     def exists(path):
-        return os.path.exists(os.path.join(env.lcwd,path))
+        return os.path.exists(os.path.join(env.lcwd, path))
 
     run = local
     #sudo = local_sudo
@@ -217,50 +216,70 @@ def localize():
     cd = lcd
 
 
+def handle_selinux(parameters=None):
+
+    if exists('/selinux'):
+        print 'SELinux detected'
+#    if run('sestatus -v | grep -i ^Current | grep -v permissive'):
+#        print 'SELinux enabled'
+        if 'permissive' not in run('sestatus -v | egrep -i "^Current mode"'):
+            print 'SELinux is not permissive'
+
+            #allows the wiki to read from the database
+            sudo('setsebool -P httpd_can_network_connect=1', pty=True)
+
+            # clobber SE Linux entirely. Hope to be more subtle in time, but this will work for now
+            sudo('echo 0 >/selinux/enforce', pty=True)
+
+
 def setup_mysql(parameters=None):
     if parameters is None:
-        parameters={}
+        parameters = {}
 
     sudo('yum -y install mysql mysql-server', pty=True)
     sudo('service mysqld restart', pty=True)
 
+    shorthostinternal = hostnameinternal
+    #if '.' in shorthostinternal:
+    #    shorthostinternal = shorthostinternal[:shorthostinternal.find('.')]
+    #    print 'shortedned', shorthostinternal
 
     adict = {
 
         'toadminuser': parameters.dbadminuser,
         'toadminpass': parameters.dbadminpass,
-        'todb':parameters.dbname,
-        'tohost':hostnameinternal,
+        'todb': parameters.dbname,
+        'tohost': hostnameinternal,
 
         'wikiusername': parameters.wikiuser,
         'wikiuserpass': parameters.userpassword,
         'hostinternal': hostnameinternal,
+        'shorthostinternal': shorthostinternal,
 
 
 
-        }
+    }
 
     #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
     mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\'' % adict
     adict['mysqlcmd'] = mysqlcmd
 
     try:
-        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)                                                                                                                       
+        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)
     except:
         print "unable to create the db"
 
-
-    run('''echo "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(hostinternal)s' identified by '%(wikiuserpass)s';" | %(mysqlcmd)s''' % adict)                                                                                                                                                                     
-
+    run('''%(mysqlcmd)s -e "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(shorthostinternal)s' identified by '%(wikiuserpass)s'" ''' % adict)
 
     adict['toadminuser'] = parameters.wikiAdminuser
     adict['toadminpass'] = parameters.wikiAdminpass
 
-    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(hostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
+    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(shorthostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
 
 
 def setup_php():
     sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
+
 
 def setup_httpd():
 
@@ -271,7 +290,6 @@ def setup_httpd():
 
     sudo("perl -p -i.bak -e 's!^DirectoryIndex.*!DirectoryIndex index.html index.php!' /etc/httpd/conf/httpd.conf", pty=True)
 
-
     if apacheconftext:
         if not exists('/etc/httpd/conf.d'):
             sudo('mkdir -p /etc/httpd/conf.d', pty=True)
@@ -280,39 +298,35 @@ def setup_httpd():
         put_text_to_file(apacheconftext, localname)
 
         try:
-            sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' % localname, pty=True)
-                 
+            sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' %
+                 localname, pty=True)
+
         except:
             pass
 
 
-
-
-
-
-
 def setup_wiki(parameters=None):
     if parameters is None:
-        parameters={}
-
-    
+        parameters = {}
 
     if not exists('/var/www'):
         sudo('mkdir -p /var/www')
-    sudo('chown %s:%s /var/www' % (parameters.unixuser, parameters.unixuser), pty=True)
+    sudo('chown %s:%s /var/www' % (parameters.unixuser,
+         parameters.unixuser), pty=True)
 
     if not exists('/var/www/html'):
         sudo('mkdir -p /var/www/html')
-        sudo('chown %s:%s /var/www/html'  % (parameters.unixuser, parameters.unixuser), pty=True)
+        sudo('chown %s:%s /var/www/html' % (parameters.unixuser,
+             parameters.unixuser), pty=True)
 
     if exists('/var/lib/php/session'):
         sudo('chmod a+rwx /var/lib/php/session')
 
     sudo('yum -y install subversion git')
 
-
     with cd('/var/www'):
-        sudo('chown %s:%s html'  % (parameters.unixuser, parameters.unixuser), pty=True)
+        sudo('chown %s:%s html' % (parameters.unixuser,
+             parameters.unixuser), pty=True)
 
         tgzver = 'mediawiki-1.20.2.tar.gz'
         tgzurl = 'http://download.wikimedia.org/mediawiki/1.20/%s' % tgzver
@@ -323,14 +337,14 @@ def setup_wiki(parameters=None):
         else:
             pass
 
-
         if not exists('html/maintenance'):
             with settings(warn_only=True):
 
-                run('pwd')
-                run('ls -tral')
-                sudo('tar -zxv -C html --strip-components 1 -f %s' % tgzver, user=parameters.unixuser)
-        
+                #run('pwd')
+                #run('ls -tral')
+                sudo('tar -zxv -C html --strip-components 1 -f %s' %
+                     tgzver, user=parameters.unixuser)
+
         #if not exists('html/.git'):
         #    run('git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git html')
 
@@ -341,9 +355,8 @@ def setup_wiki(parameters=None):
 
             with settings(
                 user=parameters.unixuser,
-                ):
+            ):
 
-                
                 put_text_to_file(robotstext, '/var/www/html/robots.txt')
                 if not exists('extensions'):
                     run('mkdir -p extensions')
@@ -373,7 +386,7 @@ def setup_wiki(parameters=None):
                         'Survey',
                         'Nuke',
                         'GoogleAdSense',
-                        ]:
+                    ]:
 
                         if not exists(extension):
                             run('git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions/%s.git' % extension)
@@ -385,17 +398,14 @@ def setup_wiki(parameters=None):
                                 else:
                                     print "can't update %s" % extension
 
-
-
                     semsettingsname = '/var/www/html/extensions/SemanticBundle/SemanticBundleSettings.php'
                     put_text_to_file(semsettingstext, semsettingsname)
-
 
         with cd('html/maintenance'):
 
             with settings(
                 user=parameters.unixuser,
-                ):
+            ):
 
                 run('rm -f SMW_setup.php')
                 run('rm -f SMW_refreshData.php')
@@ -405,26 +415,23 @@ def setup_wiki(parameters=None):
 
 def setup_webserver_step2(parameters=None):
     if parameters is None:
-        parameters={}
+        parameters = {}
 
-    ALLOW_DESTROY=parameters.destroy
+    ALLOW_DESTROY = parameters.destroy
     adict = {
-        'installdbuser':parameters.dbadminuser,
-        'installdbpass':parameters.dbadminpass,
+        'installdbuser': parameters.dbadminuser,
+        'installdbpass': parameters.dbadminpass,
 
-        'sysop':parameters.sysop,
-        'wikiname':parameters.wikiname,
-        'userpass':parameters.userpassword,
+        'sysop': parameters.sysop,
+        'wikiname': parameters.wikiname,
+        'userpass': parameters.userpassword,
 
-        'dbname':parameters.dbname,
-        'dbuser':parameters.wikiuser,
-        'dbserver':hostnameinternal,
-        'wikiAdminuser': parameters.wikiAdminuser, 
+        'dbname': parameters.dbname,
+        'dbuser': parameters.wikiuser,
+        'dbserver': hostnameinternal,
+        'wikiAdminuser': parameters.wikiAdminuser,
         'wikiAdminpass': parameters.wikiAdminpass,
-        }
-
-
-
+    }
 
     with settings(user=parameters.unixadminuser):
         with cd('/var/www/html/maintenance'):
@@ -440,24 +447,19 @@ def setup_webserver_step2(parameters=None):
         print "updating %s" % parameters.localsettingsfile
         put_text_to_file(localsettingstext, parameters.localsettingsfile)
 
-
-
-
     with cd('/var/www/html/maintenance'):
         if exists(parameters.localsettingsfile):
             run('php update.php --quick')
 
     run('apachectl restart')
 
-
-
-
-
+    with settings(warn_only=True):
+        run(' /etc/init.d/iptables stop')
 
 
 def setup_bots(parameters=None):
     if parameters is None:
-        parameters={}
+        parameters = {}
 
     with settings(warn_only=True):
 
@@ -471,13 +473,13 @@ def setup_bots(parameters=None):
         sudo('pip install argparse')
         sudo('pip install fabric')
 
-    with settings(warn_only=True):
-        sudo('yum -y install rubygems')
-        sudo('gem install rest-client')
-        sudo('gem install activesupport')
 
-
-
+        # Ruby stuff I don't need
+#    with settings(warn_only=True):
+#        sudo('yum -y install rubygems')
+#        sudo('gem install rest-client')
+        # activesupport hangs on install
+#        sudo('gem install activesupport')
 
 
 def main(argv=[]):
@@ -487,23 +489,22 @@ def main(argv=[]):
         print parameters
 
     try:
-
         setup_mysql(parameters)
         setup_php()
         setup_httpd()
+        handle_selinux(parameters)
         setup_wiki(parameters)
         setup_webserver_step2(parameters)
         setup_bots(parameters)
     except Exception, e:
-        traceback.print_exc()                                                                                                                                                            
+        traceback.print_exc()
         print "Exception: %s" % e
         traceback.print_stack()
 
-    
-    print 'mysql: %s : %s' % (parameters.wikiAdminuser, parameters.wikiAdminpass)
+    print 'mysql: %s : %s' % (
+        parameters.wikiAdminuser, parameters.wikiAdminpass)
     print 'wiki: %s : %s' % (parameters.sysop, parameters.userpassword)
     print 'url: http://%s ' % publichostname
-
 
 
 if __name__ == '__main__':
