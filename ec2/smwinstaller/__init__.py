@@ -6,7 +6,6 @@ import sys
 import os, errno
 import random
 import string
-import getpass
 
 def parseYamlConfig(parameters):
     try:
@@ -106,17 +105,13 @@ def loadParameters(argv):
                             default='WikiAdmin',
                             )
 
-
-    
     group_unix1.add_argument("--unixadminuser",
-                            help='user who can sudo',
-                            type=str,
-                            #default=getpass.getuser()
+                             help='user who can sudo',
+                             type=str,
                              )
     group_unix1.add_argument("--unixuser",
-                            help='user who will own the unix installation',
-                            type=str,
-                            #default=getpass.getuser()
+                             help='user who will own the unix installation',
+                             type=str,
                              )
 
 
