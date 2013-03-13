@@ -24,3 +24,12 @@ On a local vagrant
 
 On Redhat I needed to get past the firewall. this is the easiest quick fix
  /etc/init.d/iptables stop
+
+SELINUX
+ http://stackoverflow.com/questions/4078205/php-cant-connect-to-mysql-with-error-13-but-command-line-can
+ setsebool -P httpd_can_network_connect=1
+
+ Temporary
+ echo 0 >/selinux/enforce
+ Permanent
+ http://www.crypt.gen.nz/selinux/disable_selinux.html
