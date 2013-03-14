@@ -80,6 +80,11 @@ def loadParameters(argv):
                             type=str,
                             )
 
+    group_std1.add_argument("--yes",
+                               help="assume default for all installation questions",
+                               action="store_true",
+                               default=False,
+                               )
 
     group_std1.add_argument("--destroy",
                             help="blow away the database and the LocalSettings.php file",

@@ -114,6 +114,14 @@ def init(parameters):
     print '==internal=',hostnameinternal
     print '========ip=',hostip
 
+    print 'Are you sure?',
+    if not parameters.yes:
+        response = raw_input('y/N ')
+        if 'y' in response.lower():
+            pass
+        else:
+            sys.exit()
+
     adict = {
         'host': hostnameinternal,
         'hostip': hostip,
