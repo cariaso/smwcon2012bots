@@ -461,8 +461,8 @@ def setup_bots(parameters=None):
     with settings(warn_only=True):
 
         sudo('yum -y install git cpan perl-JSON make subversion')
-        sudo('curl -L http://cpanmin.us | perl - MediaWiki::API')
-        sudo('curl -L http://cpanmin.us | perl - MediaWiki::Bot')
+        sudo('curl -L http://cpanmin.us | perl - --force --notest MediaWiki::API')
+        sudo('curl -L http://cpanmin.us | perl - --force --notest MediaWiki::Bot')
         # remove the duplicate downloads with a temp file or a local install?
         #curl -L http://cpanmin.us | perl - --self-upgrade --sudo
 
@@ -489,6 +489,7 @@ def main(argv=[]):
         
         print parameters
         handle_selinux(parameters)
+        setup_bots(parameters)
         sys.exit()
 
     try:
