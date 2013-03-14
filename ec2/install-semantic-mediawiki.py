@@ -14,49 +14,35 @@ import smwinstaller
 
 import socket
 import httplib
-
+import re
 
 def getsetting(name):
-    result = run("wget -O - http://169.254.169.254/latest/meta-data/%s 2> /dev/null" % name)
+    result = run("wget --tries=1 -T1 -O - http://169.254.169.254/latest/meta-data/%s 2> /dev/null" % name)
     return result
 
-
-def getsettingold(name):
-    # can't respect localize()
-    conn = httplib.HTTPConnection('169.254.169.254')
-    conn.request("GET", "/latest/meta-data/%s" % name)
-    #socket.error
-    r1 = conn.getresponse()
-    result = r1.read()
-    #print 'got',r1.status, r1.reason, name, result
-    return result
 
 
 def getpublichostname():
-    if 'vagrant' not in socket.gethostname():
-        try:
-            return getsetting('public-hostname')
-        except:
-            pass
-
-    return socket.gethostname()
+    try:
+        return getsetting('public-hostname')
+    except:
+        pass
+    return env.host
 
 
 def getinternalhostname():
-    if 'vagrant' not in socket.gethostname():
-        try:
-            return getsetting('local-hostname')
-        except:
-            pass
+    try:
+        return getsetting('local-hostname')
+    except:
+        pass
     return 'localhost'
 
 
 def getip():
-    if 'vagrant' not in socket.gethostname():
-        try:
-            return getsetting('local-ipv4')
-        except:
-            pass
+    try:
+        return getsetting('local-ipv4')
+    except:
+        pass
     return '127.0.0.1'
 
 
@@ -91,13 +77,8 @@ def init(parameters):
 
     if parameters.local:
         localize()
-        publichostname = getpublichostname()
-        hostnameinternal = getinternalhostname()
-        hostip = getip()
 
-    else:
-
-        if parameters.remote:
+    if parameters.remote:
             from urlparse import urlparse
             parsed = urlparse('http://%s' % parameters.remote)
             if parsed.username:
@@ -118,21 +99,20 @@ def init(parameters):
 
             print env
 
-        publichostname = env.host
-        hostnameinternal = getinternalhostname()
-        hostip = getip()
+    publichostname = getpublichostname()
+    hostnameinternal = getinternalhostname()
+    hostip = getip()
 
     if parameters.unixuser is None:
         parameters.unixuser = getpass.getuser()
     if parameters.unixadminuser is None:
         parameters.unixadminuser = getpass.getuser()
 
-    print parameters.unixuser
-    print parameters.unixadminuser
-
-    print publichostname
-    print hostnameinternal
-    print hostip
+    print '==user=====',parameters.unixuser
+    print '==sudo=====',parameters.unixadminuser
+    print '====public=',publichostname
+    print '==internal=',hostnameinternal
+    print '========ip=',hostip
 
     adict = {
         'host': hostnameinternal,
@@ -222,7 +202,16 @@ def handle_selinux(parameters=None):
         print 'SELinux detected'
 #    if run('sestatus -v | grep -i ^Current | grep -v permissive'):
 #        print 'SELinux enabled'
-        if 'permissive' not in run('sestatus -v | egrep -i "^Current mode"'):
+
+        active = True
+        statusmsg = run('sestatus -v')
+
+        if (re.search('SELinux status:\s+disabled', statusmsg) 
+            or re.search('Current mode:\s+permissive', statusmsg)):
+            active = False
+
+
+        if active:
             print 'SELinux is not permissive'
 
             #allows the wiki to read from the database
@@ -451,7 +440,7 @@ def setup_webserver_step2(parameters=None):
         if exists(parameters.localsettingsfile):
             run('php update.php --quick')
 
-    run('apachectl restart')
+    sudo('apachectl restart')
 
     with settings(warn_only=True):
         run(' /etc/init.d/iptables stop')
@@ -486,7 +475,10 @@ def main(argv=[]):
     parameters = smwinstaller.loadParameters(argv)
     init(parameters)
     if parameters.debug:
+        
         print parameters
+        handle_selinux(parameters)
+        sys.exit()
 
     try:
         setup_mysql(parameters)
