@@ -206,7 +206,7 @@ def localize():
 
 def handle_selinux(parameters=None):
 
-    if exists('/selinux'):
+    if exists('/selinux/enforce'):
         print 'SELinux detected'
 #    if run('sestatus -v | grep -i ^Current | grep -v permissive'):
 #        print 'SELinux enabled'
@@ -451,7 +451,7 @@ def setup_webserver_step2(parameters=None):
     sudo('apachectl restart')
 
     with settings(warn_only=True):
-        run(' /etc/init.d/iptables stop')
+        run('/etc/init.d/iptables stop')
 
 
 def setup_bots(parameters=None):
@@ -463,6 +463,7 @@ def setup_bots(parameters=None):
         sudo('yum -y install git cpan perl-JSON make subversion')
         sudo('curl -L http://cpanmin.us | perl - --force --notest MediaWiki::API')
         sudo('curl -L http://cpanmin.us | perl - --force --notest MediaWiki::Bot')
+        sudo('curl -L http://cpanmin.us | perl - --force --notest LWP::Simple')
         # remove the duplicate downloads with a temp file or a local install?
         #curl -L http://cpanmin.us | perl - --self-upgrade --sudo
 
