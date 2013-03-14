@@ -462,6 +462,9 @@ def setup_bots(parameters=None):
 
         sudo('yum -y install git cpan perl-JSON make subversion')
         sudo('curl -L http://cpanmin.us | perl - MediaWiki::API')
+        sudo('curl -L http://cpanmin.us | perl - MediaWiki::Bot')
+        # remove the duplicate downloads with a temp file or a local install?
+        #curl -L http://cpanmin.us | perl - --self-upgrade --sudo
 
     with settings(warn_only=True):
 
