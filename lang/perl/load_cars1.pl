@@ -5,15 +5,21 @@ use warnings;
 use Data::Dumper;
 use MediaWiki::Bot;
 
-# From a local file
-use File::Slurp;
-my $cartext = read_file('data/cars.csv');
-
-# From a URL
-#my $url = "http://raw.github.com/0xdata/h2o/master/smalldata/cars.csv";
-#use LWP::Simple;
-#my $cartext = get($url) or die("Unable to get the csv file from github");
+my $localfn = 'data/cars.csv';
+my $cartext;
+if (-e $localfn) {
+    my $fh = open($localfn);
+    $cartext = do {local (@ARGV,$/) = $file; <>};
+} else {
+    # From a URL
+    my $url = "http://raw.github.com/0xdata/h2o/master/smalldata/cars.csv";
+    #use LWP::Simple;
+    #$cartext = get($url) or die("Unable to get the csv file from github");
+    $cartext = system("wget -O - $url 2> /dev/null");
+}
 die("Unable to load the car data") unless $cartext;
+
+
 
 my @carlines = split(/\n/,$cartext);
 my $topline = shift @carlines;
