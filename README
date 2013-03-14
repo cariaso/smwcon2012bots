@@ -14,7 +14,7 @@ Install SMW & Bot libraries on a remote machine
  ./install-semantic-mediawiki.py --remote user:pass@host:port
 
 Install SMW from inside a disposable centos/redhat
- wget -O - https://raw.github.com/cariaso/smwcon2012bots/master/ec2/bootstrap.sh | sudo bash
+ wget -O - https://raw.github.com/cariaso/smwcon2012bots/master/ec2/force-install-smw.sh | sudo bash
 
 On a local VirtualBox
  git clone git://github.com/cariaso/smwcon2012bots.git
