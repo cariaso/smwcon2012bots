@@ -27,13 +27,13 @@ my $car_template_text = <<TEMPLATE1;
 <includeonly>
 <div style="float:right; margin:1em; width: 25em; text-align: left; font-size: 90%; border:thin solid;">
 <table>
-    <tr><td>MPG</td><td>{{{MPG|}}}</td></tr>
-    <tr><td>Cylinders</td><td>{{{Cylinders|}}}</td></tr>
-    <tr><td>CC</td><td>{{{CC|}}}</td></tr>
-    <tr><td>Horsepower</td><td>{{{Horsepower|}}}</td></tr>
-    <tr><td>Weight</td><td>{{{Weight|}}}</td></tr>
-    <tr><td>ZeroTo60</td><td>{{{ZeroTo60|}}}</td></tr>
-    <tr><td>Year</td><td>{{{Year|}}}</td></tr>
+    <tr><td>MPG</td><td>[[MPG::{{{MPG|}}}]]</td></tr>
+    <tr><td>Cylinders</td><td>[[Cylinders::{{{Cylinders|}}}]]</td></tr>
+    <tr><td>CC</td><td>[[CC:{{{CC|}}}]]</td></tr>
+    <tr><td>Horsepower</td><td>[[Horsepower::{{{Horsepower|}}}]]</td></tr>
+    <tr><td>Weight</td><td>[[Weight::{{{Weight|}}}]]</td></tr>
+    <tr><td>ZeroTo60</td><td>[[ZeroTo60::{{{ZeroTo60|}}}]]</td></tr>
+    <tr><td>Year</td><td>[[Year::{{{Year|}}}]]</td></tr>
 </table>
 </div>
 </includeonly><noinclude>
@@ -42,8 +42,8 @@ This is a navigation bar for Cars
 *''Cylinders''
 *''CC'' Displacement in cubic centimeters
 *''Horsepower'' Hasta la caballo revelucion!
-*''Weight''
-*''ZeroTo60''
+*''Weight'' in pounds
+*''ZeroTo60'' in seconds
 *''Year''
 </noinclude>
 TEMPLATE1
@@ -56,7 +56,7 @@ $bot->edit({
 
 
 
-
+use FileHandle;
 
 
 
@@ -64,17 +64,16 @@ $bot->edit({
 my $localfn = 'data/cars.csv';
 my $cartext;
 if (-e $localfn) {
-    my $fh = open($localfn);
-    $cartext = do {local (@ARGV,$/) = $file; <>};
+    open(my $fh, "<", $localfn) 
+	or die "cannot open < $localfn: $!";
+    local $/ = undef;
+    $cartext = <$fh>;
 } else {
     # From a URL
-    my $url = "http://raw.github.com/0xdata/h2o/master/smalldata/cars.csv";
-    #use LWP::Simple;
-    #$cartext = get($url) or die("Unable to get the csv file from github");
-    $cartext = system("wget -O - $url 2> /dev/null");
+    my $url = "https://raw.github.com/0xdata/h2o/master/smalldata/cars.csv";
+    $cartext = `wget -O - $url 2> /dev/null`
 }
 die("Unable to load the car data") unless $cartext;
-
 
 
 
