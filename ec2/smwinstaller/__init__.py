@@ -93,6 +93,12 @@ def loadParameters(argv):
                             )
 
 
+    group_std1.add_argument("--templatedir",
+                            help="location of the templates",
+                            type=str,
+                            #default='templates',
+                            )
+
     group_std1.add_argument("--wikiname",
                             help="shortname for your wiki",
                             type=str,

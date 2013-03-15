@@ -48,10 +48,12 @@ def getip():
 
 #################################################################
 
-def loadtemplate(templatefn):
-    afile = file(templatefn, 'r')
-    text = afile.read()
-    afile.close()
+def loadtemplate(templatefn, parameters):
+    fh = file(
+        os.path.join(parameters.templatedir, templatefn), 
+        'r')
+    text = fh.read()
+    fh.close()
     return text
 
 
@@ -108,11 +110,18 @@ def init(parameters):
     if parameters.unixadminuser is None:
         parameters.unixadminuser = getpass.getuser()
 
+    if parameters.templatedir is None:
+        executabledir = os.path.dirname(sys.argv[0])
+        parameters.templatedir = os.path.join(executabledir, 'templates')
+
+
+    print '==template=',parameters.templatedir
     print '==user=====',parameters.unixuser
     print '==sudo=====',parameters.unixadminuser
-    print '====public=',publichostname
+    print '==public===',publichostname
     print '==internal=',hostnameinternal
-    print '========ip=',hostip
+    print '==ip=======',hostip
+
 
     print 'Are you sure?',
     if not parameters.yes:
@@ -141,14 +150,14 @@ def init(parameters):
     }
     #print adict
 
-    templatedir = 'templates'
+    #templatedir = 'templates'
     semsettingstemplatefn = os.path.join(
-        templatedir, 'semanticsettings.template')
-    semsettingstext = loadtemplate(semsettingstemplatefn) % adict
+        parameters.templatedir, 'semanticsettings.template')
+    semsettingstext = loadtemplate(semsettingstemplatefn, parameters) % adict
     localsettingstext = loadtemplate(
-        os.path.join(templatedir, 'localsettings.template')) % adict
+        os.path.join(parameters.templatedir, 'localsettings.template'), parameters) % adict
     robotstext = loadtemplate(
-        os.path.join(templatedir, 'robots.template')) % adict
+        os.path.join(parameters.templatedir, 'robots.template'), parameters) % adict
 
     apacheconftext = ''
 
