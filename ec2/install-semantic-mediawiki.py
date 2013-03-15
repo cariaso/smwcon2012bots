@@ -48,10 +48,8 @@ def getip():
 
 #################################################################
 
-def loadtemplate(templatefn, parameters):
-    fh = file(
-        os.path.join(parameters.templatedir, templatefn), 
-        'r')
+def loadtemplate(templatefn):
+    fh = file(templatefn, 'r')
     text = fh.read()
     fh.close()
     return text
@@ -68,15 +66,6 @@ except ImportError:
 
 
 def init(parameters):
-
-    global hostnameinternal
-    global publichostname
-    global hostip
-
-    global apacheconftext
-    global semsettingstext
-    global robotstext
-    global localsettingstext
 
     if parameters.local:
         localize()
@@ -102,9 +91,9 @@ def init(parameters):
 
             print env
 
-    publichostname = getpublichostname()
-    hostnameinternal = getinternalhostname()
-    hostip = getip()
+    parameters.publichostname = getpublichostname()
+    parameters.hostnameinternal = getinternalhostname()
+    parameters.hostip = getip()
 
     if parameters.unixuser is None:
         parameters.unixuser = getpass.getuser()
@@ -119,9 +108,9 @@ def init(parameters):
     print '==template=',parameters.templatedir
     print '==user=====',parameters.unixuser
     print '==sudo=====',parameters.unixadminuser
-    print '==public===',publichostname
-    print '==internal=',hostnameinternal
-    print '==ip=======',hostip
+    print '==public===',parameters.publichostname
+    print '==internal=',parameters.hostnameinternal
+    print '==ip=======',parameters.hostip
 
 
     print 'Are you sure?',
@@ -133,11 +122,11 @@ def init(parameters):
             sys.exit()
 
     adict = {
-        'host': hostnameinternal,
-        'hostip': hostip,
+        'host': parameters.hostnameinternal,
+        'hostip': parameters.hostip,
         'userpassword': parameters.userpassword,
-        'dbserver': hostnameinternal,
-        'dbhost': hostnameinternal,
+        'dbserver': parameters.hostnameinternal,
+        'dbhost': parameters.hostnameinternal,
         'dbname': parameters.dbname,
         'wikiuser': parameters.wikiuser,
         'dbadminpass': parameters.dbadminpass,
@@ -145,22 +134,21 @@ def init(parameters):
 
         'wikiAdminuser': parameters.wikiAdminuser,
         'wikiAdminpass': parameters.wikiAdminpass,
-        'hostname': publichostname,
+        'hostname': parameters.publichostname,
         'email': parameters.email,
         'wikiname': parameters.wikiname,
     }
     #print adict
 
-    #templatedir = 'templates'
-    semsettingstemplatefn = os.path.join(
-        parameters.templatedir, 'semanticsettings.template')
-    semsettingstext = loadtemplate(semsettingstemplatefn, parameters) % adict
-    localsettingstext = loadtemplate(
-        os.path.join(parameters.templatedir, 'localsettings.template'), parameters) % adict
-    robotstext = loadtemplate(
-        os.path.join(parameters.templatedir, 'robots.template'), parameters) % adict
+    semsettingstemplatefn = os.path.join(parameters.templatedir, 'semanticsettings.template')
+    localsettingstemplefn = os.path.join(parameters.templatedir, 'localsettings.template')
+    robotstemplatefn      = os.path.join(parameters.templatedir, 'robots.template')
 
-    apacheconftext = ''
+    parameters.semsettingstext   = loadtemplate(semsettingstemplatefn) % adict
+    parameters.localsettingstext = loadtemplate(localsettingstemplefn) % adict
+    parameters.robotstext        = loadtemplate(robotstemplatefn) % adict
+
+    parameters.apacheconftext = ''
 
 
 def put_text_to_file(text, filename):
@@ -246,7 +234,7 @@ def setup_mysql(parameters=None):
     sudo('yum -y install mysql mysql-server', pty=True)
     sudo('service mysqld restart', pty=True)
 
-    shorthostinternal = hostnameinternal
+    shorthostinternal = parameters.hostnameinternal
     #if '.' in shorthostinternal:
     #    shorthostinternal = shorthostinternal[:shorthostinternal.find('.')]
     #    print 'shortedned', shorthostinternal
@@ -256,11 +244,11 @@ def setup_mysql(parameters=None):
         'toadminuser': parameters.dbadminuser,
         'toadminpass': parameters.dbadminpass,
         'todb': parameters.dbname,
-        'tohost': hostnameinternal,
+        'tohost': parameters.hostnameinternal,
 
         'wikiusername': parameters.wikiuser,
         'wikiuserpass': parameters.userpassword,
-        'hostinternal': hostnameinternal,
+        'hostinternal': parameters.hostnameinternal,
         'shorthostinternal': shorthostinternal,
 
 
@@ -297,12 +285,12 @@ def setup_httpd():
 
     sudo("perl -p -i.bak -e 's!^DirectoryIndex.*!DirectoryIndex index.html index.php!' /etc/httpd/conf/httpd.conf", pty=True)
 
-    if apacheconftext:
+    if parameters.apacheconftext:
         if not exists('/etc/httpd/conf.d'):
             sudo('mkdir -p /etc/httpd/conf.d', pty=True)
 
         localname = '/tmp/httpd-conf-semanticmediawiki.conf'
-        put_text_to_file(apacheconftext, localname)
+        put_text_to_file(parameters.apacheconftext, localname)
 
         try:
             sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' %
@@ -364,7 +352,7 @@ def setup_wiki(parameters=None):
                 user=parameters.unixuser,
             ):
 
-                put_text_to_file(robotstext, '/var/www/html/robots.txt')
+                put_text_to_file(parameters.robotstext, '/var/www/html/robots.txt')
                 if not exists('extensions'):
                     run('mkdir -p extensions')
 
@@ -406,7 +394,7 @@ def setup_wiki(parameters=None):
                                     print "can't update %s" % extension
 
                     semsettingsname = '/var/www/html/extensions/SemanticBundle/SemanticBundleSettings.php'
-                    put_text_to_file(semsettingstext, semsettingsname)
+                    put_text_to_file(parameters.semsettingstext, semsettingsname)
 
         with cd('html/maintenance'):
 
@@ -435,7 +423,7 @@ def setup_webserver_step2(parameters=None):
 
         'dbname': parameters.dbname,
         'dbuser': parameters.wikiuser,
-        'dbserver': hostnameinternal,
+        'dbserver': parameters.hostnameinternal,
         'wikiAdminuser': parameters.wikiAdminuser,
         'wikiAdminpass': parameters.wikiAdminpass,
     }
@@ -452,7 +440,7 @@ def setup_webserver_step2(parameters=None):
                 run('php /var/www/html/maintenance/install.php --installdbuser %(wikiAdminuser)s --installdbpass "%(wikiAdminpass)s" --scriptpath / --dbuser %(dbuser)s --pass "%(userpass)s" --dbtype mysql --dbserver %(dbserver)s --dbname %(dbname)s  %(wikiname)s %(sysop)s' % adict)
 
         print "updating %s" % parameters.localsettingsfile
-        put_text_to_file(localsettingstext, parameters.localsettingsfile)
+        put_text_to_file(parameters.localsettingstext, parameters.localsettingsfile)
 
     with cd('/var/www/html/maintenance'):
         if exists(parameters.localsettingsfile):
@@ -519,7 +507,7 @@ def main(argv=[]):
     print 'mysql: %s : %s' % (
         parameters.wikiAdminuser, parameters.wikiAdminpass)
     print 'wiki: %s : %s' % (parameters.sysop, parameters.userpassword)
-    print 'url: http://%s ' % publichostname
+    print 'url: http://%s ' % parameters.publichostname
 
 
 if __name__ == '__main__':

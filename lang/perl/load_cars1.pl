@@ -29,7 +29,7 @@ my $car_template_text = <<TEMPLATE1;
 <table>
     <tr><td>MPG</td><td>[[MPG::{{{MPG|}}}]]</td></tr>
     <tr><td>Cylinders</td><td>[[Cylinders::{{{Cylinders|}}}]]</td></tr>
-    <tr><td>CC</td><td>[[CC:{{{CC|}}}]]</td></tr>
+    <tr><td>CC</td><td>[[CC::{{{CC|}}}]]</td></tr>
     <tr><td>Horsepower</td><td>[[Horsepower::{{{Horsepower|}}}]]</td></tr>
     <tr><td>Weight</td><td>[[Weight::{{{Weight|}}}]]</td></tr>
     <tr><td>ZeroTo60</td><td>[[ZeroTo60::{{{ZeroTo60|}}}]]</td></tr>
