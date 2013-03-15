@@ -63,7 +63,8 @@ try:
     from fabric.operations import local
     import fabric
 except ImportError:
-    print 'without fabric this program is a bit limited. try "pip install fabric"'
+    print 'without fabric this program is a very limited. try "pip install fabric"'
+    # seems silly, but I think --local mode could be made to work fine without it
 
 
 def init(parameters):
