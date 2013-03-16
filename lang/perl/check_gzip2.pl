@@ -8,20 +8,22 @@ use MediaWiki::API;
 # http://search.cpan.org/~exobuzz/MediaWiki-API-0.37/lib/MediaWiki/API.pm
 
 my $mw_api_url = 'http://semantic-mediawiki.org/w/api.php';
+my $params = {
+    action     => 'askargs',
+    conditions => 'Category:SMW_site',
+    printouts  => 'Homepage|APIURL',
+    parameters =>'|format=table',
+    
+    # printouts don't work with these parameters below
+    #parameters =>'|sort=Modification date|order=desc',
+    # blank or missing cause a server side error
+};
 
 my $mw = MediaWiki::API->new();
 $mw->{config}->{api_url} = $mw_api_url;
 
-my $response = $mw->api( {
-        action     => 'askargs',
-        conditions => 'Category:SMW_site',
-        printouts  => 'Homepage|APIURL',
-	parameters =>'|format=table',
-
-	# printouts don't work with these parameters above
-	#parameters =>'|sort=Modification date|order=desc',
-        })
-           || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
+my $response = $mw->api($params)
+    || warn $mw->{error}->{code} . ': ' . $mw->{error}->{details};
 
 my $results = $response->{query}->{results};
 
@@ -47,20 +49,19 @@ foreach my $name (sort keys %$results) {
     }
 
 
-
     # Check for gzip compression on a json response
     my $address = "$site_api_url?action=smwinfo&format=json";
     my $response = $ua->get($address, 
 			    'Accept-Encoding' => $can_accept);
     my $code = $response->{_rc};
     my $text = $response->decoded_content;
-    my $ok = '';
+    my $status = '';
     if ($text =~ /^\{.*\}$/) {
-	$ok = 'OK';
+	$status = 'OK';
     }
     #print $text;
     #print Dumper $response;
     my $encoding = $response->{_headers}->{'content-encoding'} || '';
 
-    print "$ok\t$code\t$encoding\t$name           \t$site_api_url\n";
+    print "$status\t$code\t$encoding\t$name           \t$site_api_url\n";
 }
