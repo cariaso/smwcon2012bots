@@ -24,7 +24,10 @@ def getsetting(name, default=None):
     return result
 
 def getpublichostname():
-    return getsetting('public-hostname', env.host)
+    if env.host:
+        return getsetting('public-hostname', env.host)
+    else:
+        return 'localhost'
 
 def getinternalhostname():
     return getsetting('local-hostname', 'localhost')
@@ -237,11 +240,11 @@ def setup_mysql(parameters=None):
     run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(tohost)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
 
 
-def setup_php():
+def setup_php(parameters):
     sudo('yum -y install php-devel php-pear php-pecl-apc php php-mysql php-xml', pty=True)
 
 
-def setup_httpd():
+def setup_httpd(parameters):
 
     sudo('yum -y install httpd httpd-devel', pty=True)
 
@@ -445,8 +448,8 @@ def main(argv=[]):
 
     try:
         setup_mysql(parameters)
-        setup_php()
-        setup_httpd()
+        setup_php(parameters)
+        setup_httpd(parameters)
         handle_selinux(parameters)
         setup_wiki(parameters)
         setup_webserver_step2(parameters)
