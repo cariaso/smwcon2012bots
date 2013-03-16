@@ -16,34 +16,21 @@ import socket
 import httplib
 import re
 
-def getsetting(name):
-    result = run("wget --tries=1 -T1 -O - http://169.254.169.254/latest/meta-data/%s 2> /dev/null" % name)
+def getsetting(name, default=None):
+    try:
+        result = run("wget --tries=1 -T1 -O - http://169.254.169.254/latest/meta-data/%s 2> /dev/null" % name)
+    except:
+        result = default
     return result
 
-
-
 def getpublichostname():
-    try:
-        return getsetting('public-hostname')
-    except:
-        pass
-    return env.host
-
+    return getsetting('public-hostname', env.host)
 
 def getinternalhostname():
-    try:
-        return getsetting('local-hostname')
-    except:
-        pass
-    return 'localhost'
-
+    return getsetting('local-hostname', 'localhost')
 
 def getip():
-    try:
-        return getsetting('local-ipv4')
-    except:
-        pass
-    return '127.0.0.1'
+    return getsetting('local-ipv4', '127.0.0.1')
 
 
 #################################################################
@@ -105,12 +92,12 @@ def init(parameters):
         parameters.templatedir = os.path.join(executabledir, 'templates')
 
 
-    print '==template=',parameters.templatedir
-    print '==user=====',parameters.unixuser
-    print '==sudo=====',parameters.unixadminuser
-    print '==public===',parameters.publichostname
-    print '==internal=',parameters.hostnameinternal
-    print '==ip=======',parameters.hostip
+    print '= template =',parameters.templatedir
+    print '= user     =',parameters.unixuser
+    print '= sudo     =',parameters.unixadminuser
+    print '= public   =',parameters.publichostname
+    print '= internal =',parameters.hostnameinternal
+    print '= ip       =',parameters.hostip
 
 
     print 'Are you sure?',
@@ -183,21 +170,13 @@ def localize():
     global put_text_to_file
     global cd
 
-    #orig_run = run
-
-    orig_sudo = sudo
-
     def sudo(cmd, pty=None, user=None):
         return local(cmd)
-
-    orig_exists = exists
 
     def exists(path):
         return os.path.exists(os.path.join(env.lcwd, path))
 
     run = local
-    #sudo = local_sudo
-    #exists = local_exists
     put_text_to_file = put_text_to_local_file
     cd = lcd
 
@@ -206,8 +185,6 @@ def handle_selinux(parameters=None):
 
     if exists('/selinux/enforce'):
         print 'SELinux detected'
-#    if run('sestatus -v | grep -i ^Current | grep -v permissive'):
-#        print 'SELinux enabled'
 
         active = True
         statusmsg = run('sestatus -v')
@@ -215,7 +192,6 @@ def handle_selinux(parameters=None):
         if (re.search('SELinux status:\s+disabled', statusmsg) 
             or re.search('Current mode:\s+permissive', statusmsg)):
             active = False
-
 
         if active:
             print 'SELinux is not permissive'
@@ -234,13 +210,7 @@ def setup_mysql(parameters=None):
     sudo('yum -y install mysql mysql-server', pty=True)
     sudo('service mysqld restart', pty=True)
 
-    shorthostinternal = parameters.hostnameinternal
-    #if '.' in shorthostinternal:
-    #    shorthostinternal = shorthostinternal[:shorthostinternal.find('.')]
-    #    print 'shortedned', shorthostinternal
-
     adict = {
-
         'toadminuser': parameters.dbadminuser,
         'toadminpass': parameters.dbadminpass,
         'todb': parameters.dbname,
@@ -249,13 +219,8 @@ def setup_mysql(parameters=None):
         'wikiusername': parameters.wikiuser,
         'wikiuserpass': parameters.userpassword,
         'hostinternal': parameters.hostnameinternal,
-        'shorthostinternal': shorthostinternal,
-
-
-
     }
 
-    #mysqlcmd = 'echo mysql -u %(toadminuser)s --password=\'%(toadminpass)s\' -h %(todb)s.%(tohost)s ''' % adict
     mysqlcmd = 'mysql -u %(toadminuser)s --password=\'%(toadminpass)s\'' % adict
     adict['mysqlcmd'] = mysqlcmd
 
@@ -264,12 +229,12 @@ def setup_mysql(parameters=None):
     except:
         print "unable to create the db"
 
-    run('''%(mysqlcmd)s -e "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(shorthostinternal)s' identified by '%(wikiuserpass)s'" ''' % adict)
+    run('''%(mysqlcmd)s -e "grant index, create, select, insert, update, delete, alter, lock tables on %(todb)s.* to '%(wikiusername)s'@'%(tohost)s' identified by '%(wikiuserpass)s'" ''' % adict)
 
     adict['toadminuser'] = parameters.wikiAdminuser
     adict['toadminpass'] = parameters.wikiAdminpass
 
-    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(shorthostinternal)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
+    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(tohost)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
 
 
 def setup_php():
@@ -295,7 +260,6 @@ def setup_httpd():
         try:
             sudo('mv %s /etc/httpd/conf.d/semanticmediawiki.conf' %
                  localname, pty=True)
-
         except:
             pass
 
@@ -306,13 +270,11 @@ def setup_wiki(parameters=None):
 
     if not exists('/var/www'):
         sudo('mkdir -p /var/www')
-    sudo('chown %s:%s /var/www' % (parameters.unixuser,
-         parameters.unixuser), pty=True)
+    sudo('chown %s:%s /var/www' % (parameters.unixuser, parameters.unixuser), pty=True)
 
     if not exists('/var/www/html'):
         sudo('mkdir -p /var/www/html')
-        sudo('chown %s:%s /var/www/html' % (parameters.unixuser,
-             parameters.unixuser), pty=True)
+        sudo('chown %s:%s /var/www/html' % (parameters.unixuser, parameters.unixuser), pty=True)
 
     if exists('/var/lib/php/session'):
         sudo('chmod a+rwx /var/lib/php/session')
@@ -335,8 +297,6 @@ def setup_wiki(parameters=None):
         if not exists('html/maintenance'):
             with settings(warn_only=True):
 
-                #run('pwd')
-                #run('ls -tral')
                 sudo('tar -zxv -C html --strip-components 1 -f %s' %
                      tgzver, user=parameters.unixuser)
 
@@ -350,7 +310,7 @@ def setup_wiki(parameters=None):
 
             with settings(
                 user=parameters.unixuser,
-            ):
+                ):
 
                 put_text_to_file(parameters.robotstext, '/var/www/html/robots.txt')
                 if not exists('extensions'):
@@ -473,14 +433,6 @@ def setup_bots(parameters=None):
         sudo('pip install fabric')
 
 
-        # Ruby stuff I don't need
-#    with settings(warn_only=True):
-#        sudo('yum -y install rubygems')
-#        sudo('gem install rest-client')
-        # activesupport hangs on install
-#        sudo('gem install activesupport')
-
-
 def main(argv=[]):
     parameters = smwinstaller.loadParameters(argv)
     init(parameters)
@@ -504,9 +456,8 @@ def main(argv=[]):
         print "Exception: %s" % e
         traceback.print_stack()
 
-    print 'mysql: %s : %s' % (
-        parameters.wikiAdminuser, parameters.wikiAdminpass)
-    print 'wiki: %s : %s' % (parameters.sysop, parameters.userpassword)
+    print 'mysql: %s : %s'  % (parameters.wikiAdminuser, parameters.wikiAdminpass)
+    print 'wiki: %s : %s'   % (parameters.sysop, parameters.userpassword)
     print 'url: http://%s ' % parameters.publichostname
 
 
