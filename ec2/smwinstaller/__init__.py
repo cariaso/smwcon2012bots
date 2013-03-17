@@ -143,14 +143,14 @@ def loadParameters(argv):
 
 
     group_mysql1.add_argument("--wikiAdminuser",
-                            help='this mysql account will be created and given the ability to create tables',
-                            type=str,
-                            default='wikiadmin')
+                              help='this mysql account will be created and given the ability to create tables',
+                              type=str,
+                              default='wikiadmin')
     group_mysql1.add_argument("--wikiAdminpass",
-                            help='you can override the randomly chosen one',
-                            type=str,
-                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
-                            )
+                              help='you can override the randomly chosen one',
+                              type=str,
+                              #default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+                              )
 
     group_mysql1.add_argument("--wikiuser",
                             help='this mysql is used by the wiki to read and write to the database',
@@ -159,7 +159,6 @@ def loadParameters(argv):
     group_mysql1.add_argument("--userpassword",
                             help='you can override the randomly chosen ones',
                             type=str,
-                            default=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
                            )
 
 

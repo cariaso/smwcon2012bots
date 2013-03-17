@@ -181,7 +181,15 @@ $smwgEnableTemplateSupport = true;
 
 
 
-#include_once("$IP/extensions/SemanticForms/SemanticForms.php");
+include_once("$IP/extensions/SemanticForms/SemanticForms.php");
+include_once("$IP/extensions/SemanticResultFormats/SemanticResultFormats.php");
+#include_once("$IP/extensions/SemanticInternalObjects/SemanticInternalObjects.php");
+
+include_once("$IP/extensions/SemanticDrilldown/SemanticDrilldown.php");
+$sdgHideCategoriesByDefault = true;
+$sdgFiltersSmallestFontSize=9;
+$sdgFiltersLargestFontSize=25;
+
 
 #$wgJobRunRate = 0.01;
 
@@ -191,8 +199,6 @@ $wgNamespacesWithSubpages[NS_MAIN] = true;
 
 
 
-#include_once("$IP/extensions/SemanticInternalObjects/SemanticInternalObjects.php");
-#include_once("$IP/extensions/SemanticResultFormats/SemanticResultFormats.php");
 
 
 
@@ -229,11 +235,6 @@ require_once("$IP/extensions/Nuke/Nuke.php");
 
 #$wgDebugLogFile = '/tmp/mwlog.txt';
 #$wgShowExceptionDetails = true;
-
-#include_once("$IP/extensions/SemanticDrilldown/SemanticDrilldown.php");
-$sdgHideCategoriesByDefault = true;
-$sdgFiltersSmallestFontSize=9;
-$sdgFiltersLargestFontSize=25;
 
 # necessary for bot semanticforms writes
 #$wgParserConf['preprocessorClass'] = 'Preprocessor_Hash';

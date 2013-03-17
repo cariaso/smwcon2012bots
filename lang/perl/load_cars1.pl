@@ -27,6 +27,7 @@ my $car_template_text = <<TEMPLATE1;
 <includeonly>
 <div style="float:right; margin:1em; width: 25em; text-align: left; font-size: 90%; border:thin solid;">
 <table>
+    <tr><td>Name</td><td>[[Name::{{{Name|}}}]]</td></tr>
     <tr><td>MPG</td><td>[[MPG::{{{MPG|}}}]]</td></tr>
     <tr><td>Cylinders</td><td>[[Cylinders::{{{Cylinders|}}}]]</td></tr>
     <tr><td>CC</td><td>[[CC::{{{CC|}}}]]</td></tr>
@@ -35,9 +36,10 @@ my $car_template_text = <<TEMPLATE1;
     <tr><td>ZeroTo60</td><td>[[ZeroTo60::{{{ZeroTo60|}}}]]</td></tr>
     <tr><td>Year</td><td>[[Year::{{{Year|}}}]]</td></tr>
 </table>
-</div>
+</div>[[Category:Car]]
 </includeonly><noinclude>
 This is a navigation bar for Cars
+*''Name''
 *''MPG''
 *''Cylinders''
 *''CC'' Displacement in cubic centimeters
@@ -56,7 +58,139 @@ $bot->edit({
 
 
 
-use FileHandle;
+
+
+
+
+
+
+
+
+
+
+
+
+foreach my $field (
+    'MPG',
+    'Cylinders',
+    'CC',
+    'Horsepower',
+    'Weight',
+    'ZeroTo60',
+    'Year',
+    ) {
+
+    my $property_text = "[[has type::Number]]";
+
+    $bot->edit({
+	page    => "Property:$field",
+	summary => 'Make a property',
+	text    => $property_text,
+	       });
+    print "made property $field\n";
+
+
+    my $filter_text = "This filter covers the property [[Covers property::$field]].";
+
+    $bot->edit({
+	page    => "Filter:$field",
+	summary => 'Make a filter',
+	text    => $filter_text,
+	       });
+    print "made filter $field\n";
+}
+
+
+
+
+
+
+
+my $car_category_text = <<PAGE2;
+It has the default form [[Has default form::Car]].
+
+This category uses the filters:
+*[[Has filter::Filter:Name]]
+*[[Has filter::Filter:MPG]]
+*[[Has filter::Filter:Cylinders]]
+*[[Has filter::Filter:CC]]
+*[[Has filter::Filter:Horsepower]]
+*[[Has filter::Filter:Weight]]
+*[[Has filter::Filter:ZeroTo60]]
+*[[Has filter::Filter:Year]]
+PAGE2
+
+$bot->edit({
+    page    => 'Category:Car',
+    summary => 'Associate the form',
+    text    => $car_category_text,
+	       });
+
+
+
+
+
+
+
+my $car_form_text = <<PAGE3;
+<noinclude>
+This is the "Car" form.
+
+To create a page with this form, enter the page name below;
+if a page with that name already exists, you will be sent to a form to edit that page.
+
+
+{{#forminput:form=Car}}
+
+</noinclude><includeonly>
+<div id="wikiPreview" style="display: none; padding-bottom: 25px; margin-bottom: 25px; border-bottom: 1px solid #AAAAAA;"></div>
+{{{for template|Car}}}
+
+{| class="formtable"
+! Name:
+| {{{field|Name}}}
+|-
+! MPG:
+| {{{field|MPG}}}
+|-
+! Cylinders:
+| {{{field|Cylinders}}}
+|-
+! CC:
+| {{{field|CC}}}
+|-
+! Horsepower:
+| {{{field|Horsepower}}}
+|-
+! Weight:
+| {{{field|Weight}}}
+|-
+! ZeroTo60:
+| {{{field|ZeroTo60}}}
+|-
+! Year:
+| {{{field|Year}}}
+|}
+{{{end template}}}
+
+Here you can edit the '''Free text:''' of the page
+
+{{{standard input|free text|rows=10}}}
+
+{{{standard input|summary}}}
+
+{{{standard input|minor edit}}} {{{standard input|watch}}}
+
+{{{standard input|save}}} {{{standard input|preview}}} {{{standard input|changes}}} {{{standard input|cancel}}}
+</includeonly>
+PAGE3
+
+$bot->edit({
+    page    => 'Form:Car',
+    summary => 'The form',
+    text    => $car_form_text,
+	       });
+
 
 
 
@@ -87,6 +221,7 @@ foreach my $carline (@carlines) {
     my $title = $uniquename++;
 
     my $pagetext = "{{Car
+|Name=$fields[0]
 |MPG=$fields[1]
 |Cylinders=$fields[2]
 |CC=$fields[3]

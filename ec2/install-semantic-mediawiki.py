@@ -84,6 +84,13 @@ def init(parameters):
     parameters.publichostname = getpublichostname()
     parameters.hostnameinternal = getinternalhostname()
     parameters.hostip = getip()
+    
+    if parameters.userpassword is None:
+        parameters.userpassword =''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+        
+    if parameters.wikiAdminpass is None:
+        parameters.wikiAdminpass =''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
+        
 
     if parameters.unixuser is None:
         parameters.unixuser = getpass.getuser()
@@ -237,7 +244,7 @@ def setup_mysql(parameters=None):
     adict['toadminuser'] = parameters.wikiAdminuser
     adict['toadminpass'] = parameters.wikiAdminpass
 
-    run('echo "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(tohost)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  | %(mysqlcmd)s' % adict)
+    run('%(mysqlcmd)s -e "GRANT ALL PRIVILEGES ON %(todb)s.* TO \'%(toadminuser)s\'@\'%(tohost)s\' IDENTIFIED BY \'%(toadminpass)s\' with GRANT OPTION;"  ' % adict)
 
 
 def setup_php(parameters):
@@ -330,15 +337,19 @@ def setup_wiki(parameters=None):
                     for extension in [
                         'SemanticMediaWiki',
 
-                        #'SemanticDrilldown',
-                        #'SemanticForms',
+                        # not working for me
+                        'SemanticBundle',
+                        
+                        # so still relying on these
+                        'SemanticForms',
+                        'SemanticDrilldown',
+                        'SemanticResultFormats',
+                        #'SemanticInternalObjects',
+
                         'ConfirmEdit',
                         'ParserFunctions',
-                        #'SemanticInternalObjects',
                         'Validator',
                         'DataValues',
-                        'SemanticBundle',
-                        #'SemanticResultFormats',
                         'ReplaceText',
                         'TitleBlacklist',
                         'Survey',
@@ -454,10 +465,13 @@ def main(argv=[]):
         setup_wiki(parameters)
         setup_webserver_step2(parameters)
         setup_bots(parameters)
+
     except Exception, e:
         traceback.print_exc()
         print "Exception: %s" % e
         traceback.print_stack()
+
+    sudo('apachectl restart')
 
     print 'mysql: %s : %s'  % (parameters.wikiAdminuser, parameters.wikiAdminpass)
     print 'wiki: %s : %s'   % (parameters.sysop, parameters.userpassword)
