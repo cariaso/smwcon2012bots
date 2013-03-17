@@ -235,7 +235,7 @@ def setup_mysql(parameters=None):
     adict['mysqlcmd'] = mysqlcmd
 
     try:
-        run('echo "create database %(todb)s;" | %(mysqlcmd)s' % adict)
+        run('%(mysqlcmd)s -e "create database %(todb)s;"' % adict)
     except:
         print "unable to create the db"
 
@@ -405,7 +405,7 @@ def setup_webserver_step2(parameters=None):
     with settings(user=parameters.unixadminuser):
         with cd('/var/www/html/maintenance'):
             if ALLOW_DESTROY:
-                sudo('echo "drop database %(dbname)s" | mysql -u %(installdbuser)s' % adict)
+                sudo('mysql -u %(installdbuser)s -e "drop database %(dbname)s"' % adict)
                 run('rm -f %s' % parameters.localsettingsfile)
             else:
                 print "I'm not allowed to overwrite your database or LocalSettings.pgp. try with --destroy"
@@ -423,7 +423,7 @@ def setup_webserver_step2(parameters=None):
     sudo('apachectl restart')
 
     with settings(warn_only=True):
-        run('/etc/init.d/iptables stop')
+        sudo('/etc/init.d/iptables stop')
 
 
 def setup_bots(parameters=None):
