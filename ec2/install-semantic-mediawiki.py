@@ -24,8 +24,9 @@ def getsetting(name, default=None):
     return result
 
 def getpublichostname():
-    if env.host:
-        return getsetting('public-hostname', env.host)
+    aname = getsetting('public-hostname', env.host)
+    if aname:
+        return aname
     else:
         return 'localhost'
 
@@ -186,7 +187,10 @@ def localize():
     def exists(path):
         return os.path.exists(os.path.join(env.lcwd, path))
 
-    run = local
+    def runlocal(cmd):
+        return local(cmd, capture=True)
+
+    run = runlocal
     put_text_to_file = put_text_to_local_file
     cd = lcd
 
